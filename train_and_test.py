@@ -10,6 +10,7 @@ from utils.metrics import evaluate_model_performance, print_metrics_comparison
 from utils.experiment_logging import log_experiment, save_predictions, prompt_user_notes, generate_experiment_id
 from baselines.kmer_baseline import train_kmer_baseline, train_multi_kmer_baseline
 from baselines.cnn_baseline import train_cnn_baseline
+from baselines.blast_baseline import run_blast_baseline
 
 def run_experiment(csv_path="data/viral_genome_df_prelim.csv", n_samples=5000,
                   engineering_fraction=0.02, methods=['random_replacement']):
@@ -74,6 +75,16 @@ def run_experiment(csv_path="data/viral_genome_df_prelim.csv", n_samples=5000,
 
     print("K-mer Results:")
     print_metrics_comparison(kmer_eval['overall'])
+
+    print("\nRunning BLAST-based Baseline...")
+    blast_results = run_blast_baseline(X_train, X_test, y_train, y_test)
+    blast_eval = evaluate_model_performance(
+        y_test.values, blast_results['y_test_pred'], test_data, blast_results['y_test_proba']
+    )
+    models_results['blast'] = {'results': blast_results, 'evaluation': blast_eval}
+
+    print("BLAST Results:")
+    print_metrics_comparison(blast_eval['overall'])
 
     # # Multi K-mer baseline
     # print("\nTraining Multi-K-mer Baseline...")
