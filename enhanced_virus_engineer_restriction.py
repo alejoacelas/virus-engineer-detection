@@ -6,7 +6,35 @@ Uses actual restriction sites for realistic genetic engineering
 import random
 import json
 import os
+import argparse
 from virus_sequences import VIRUSES, RESTRICTION_SITES
+
+# Global seed control
+DEFAULT_SEED = 42  # Default seed for reproducible results
+
+def set_random_seed(seed=None):
+    """Set random seed for reproducible results
+    
+    Args:
+        seed (int, optional): Random seed. If None, uses DEFAULT_SEED
+    """
+    if seed is None:
+        seed = DEFAULT_SEED
+    
+    random.seed(seed)
+    print(f"🎲 Random seed set to: {seed}")
+    return seed
+
+def get_seed_from_env():
+    """Get seed from environment variable VIRUS_SEED"""
+    import os
+    env_seed = os.environ.get('VIRUS_SEED')
+    if env_seed:
+        try:
+            return int(env_seed)
+        except ValueError:
+            print(f"⚠️  Invalid VIRUS_SEED environment variable: {env_seed}")
+    return None
 
 def get_clean_sequence(sequence):
     """Clean sequence string"""
@@ -442,10 +470,19 @@ def engineer_virus_simple_fallback(virus_key, sequence):
         "restriction_info": {"method": "fallback", "enzyme": None}
     }
 
-def generate_restriction_based_dataset(num_per_virus=1000):
-    """Generate dataset using restriction sites"""
+def generate_restriction_based_dataset(num_per_virus=1000, seed=None):
+    """Generate dataset using restriction sites
+    
+    Args:
+        num_per_virus (int): Number of examples per virus
+        seed (int, optional): Random seed for reproducibility
+    """
+    # Set random seed for reproducibility
+    actual_seed = set_random_seed(seed)
+    
     print(f"🧬 Generating Restriction-Based Virus Engineering Dataset")
     print(f"📊 Target: {num_per_virus} examples per virus")
+    print(f"🎲 Using seed: {actual_seed}")
     print("=" * 60)
     
     results = []
@@ -520,7 +557,55 @@ def save_restriction_results(results, base_filename="restriction_virus_engineere
     
     print(f"✅ Saved {len(results)} individual FASTA files")
 
-if __name__ == "__main__":
+def main():
+    """Main function with command line argument parsing"""
+    parser = argparse.ArgumentParser(
+        description="Generate virus engineering dataset with restriction site targeting",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python enhanced_virus_engineer_restriction.py                    # Use default seed (42)
+  python enhanced_virus_engineer_restriction.py --seed 123         # Use seed 123
+  python enhanced_virus_engineer_restriction.py --seed 0           # Use seed 0 (different results)
+  python enhanced_virus_engineer_restriction.py --num-per-virus 500 # Generate 500 per virus
+  python enhanced_virus_engineer_restriction.py --seed random      # Use random seed each time
+  VIRUS_SEED=999 python enhanced_virus_engineer_restriction.py     # Use environment variable
+
+Reproducibility:
+  - Same seed = identical dataset every time
+  - Different seed = different dataset (but still deterministic)
+  - No seed = uses default seed (42) for reproducible results
+        """
+    )
+    
+    parser.add_argument(
+        '--seed', 
+        type=str, 
+        default=None,
+        help='Random seed for reproducibility (default: 42). Use "random" for different results each time.'
+    )
+    
+    parser.add_argument(
+        '--num-per-virus',
+        type=int,
+        default=1000,
+        help='Number of engineered examples per virus (default: 1000)'
+    )
+    
+    parser.add_argument(
+        '--no-seed',
+        action='store_true',
+        help='Do not set any seed (truly random results each time)'
+    )
+    
+    args = parser.parse_args()
+    
+    print("🧬 RESTRICTION-BASED VIRUS ENGINEERING SYSTEM")
+    print("=" * 60)
+    print(f"📊 Available viruses: {len(VIRUSES)}")
+    print(f"🔬 Available restriction enzymes: {len(RESTRICTION_SITES)}")
+    print()
+    
     print("Available viruses:")
     for key, data in VIRUSES.items():
         print(f"  {key}: {data['name']} ({data['length']:,} bp)")
@@ -531,8 +616,39 @@ if __name__ == "__main__":
         print(f"  {i}. {method.__name__}")
     print()
     
+    # Determine seed to use
+    seed = None
+    if args.no_seed:
+        print("🎲 No seed set - truly random results each time")
+        seed = None
+    elif args.seed == "random":
+        import time
+        seed = int(time.time()) % 1000000  # Use timestamp as seed
+        print(f"🎲 Using random seed: {seed}")
+    elif args.seed is not None:
+        try:
+            seed = int(args.seed)
+            print(f"🎲 Using specified seed: {seed}")
+        except ValueError:
+            print(f"❌ Invalid seed: {args.seed}. Must be an integer or 'random'")
+            return
+    else:
+        # Check environment variable first
+        env_seed = get_seed_from_env()
+        if env_seed is not None:
+            seed = env_seed
+            print(f"🎲 Using environment seed: {seed}")
+        else:
+            seed = DEFAULT_SEED
+            print(f"🎲 Using default seed: {seed}")
+    
+    print()
+    
     # Generate the restriction-based dataset
-    results = generate_restriction_based_dataset(num_per_virus=1000)
+    results = generate_restriction_based_dataset(
+        num_per_virus=args.num_per_virus, 
+        seed=seed
+    )
     save_restriction_results(results)
     
     print(f"\n🎉 RESTRICTION-BASED DATASET COMPLETE!")
@@ -540,3 +656,10 @@ if __name__ == "__main__":
     print(f"✅ Uses actual restriction sites for realistic editing")
     print(f"✅ Biological randomness added (flanking sequences, size variations)")
     print(f"✅ Full genomes with complete metadata")
+    
+    if seed is not None:
+        print(f"🎲 Dataset generated with seed: {seed}")
+        print(f"💡 To reproduce this exact dataset, run with: --seed {seed}")
+
+if __name__ == "__main__":
+    main()

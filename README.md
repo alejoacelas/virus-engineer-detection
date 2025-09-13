@@ -1,20 +1,20 @@
 # Real Virus Engineering System
 
-A realistic virus engineering pipeline using actual NCBI sequences that generates full genomes with modifications at restriction sites.
+A (not very) realistic virus engineering pipeline using actual NCBI sequences that generates full genomes with modifications at restriction sites.
 
 ## Features
 
-✅ **Real NCBI Viruses**: Coronavirus NL63 and Adenovirus 54  
-✅ **Full Genomes**: Complete viral sequences (28K-35K bp)  
-✅ **Realistic Engineering**: Uses actual restriction sites when available  
-✅ **Safe Fallbacks**: Uses safe genomic regions when no restriction sites found  
-✅ **Multiple Operations**: GFP insertion, deletion, substitution  
-✅ **Individual Output**: Each genome saved as separate FASTA file  
+**Real NCBI Viruses**: Coronavirus NL63 and Adenovirus 54  
+**Full Genomes**: Complete viral sequences (28K-35K bp)  
+**Realistic Engineering**: Uses actual restriction sites when available - *could add more restriction sites and should probably control how much of the genome it's allowed to change*
+**Safe Fallbacks**: Uses safe genomic regions when no restriction sites found - *not sure this makes sense to do*
+**Multiple Operations**: GFP insertion, deletion, substitution  
+**Individual Output**: Each genome saved as separate FASTA file  
 
 ## Files
 
 - `virus_engineer.py` - Main engineering system
-- `virus_sequences.py` - Real virus database loader
+- `virus_sequences.py` - Virus genome sequence loader
 - `corona_real.txt` - Human Coronavirus NL63 (NC_005831.2) - 28,393 bp
 - `adeno_real.txt` - Human Adenovirus 54 (NC_012959.1) - 34,920 bp
 - `engineered_genomes/` - Directory with individual FASTA files
@@ -27,7 +27,7 @@ A realistic virus engineering pipeline using actual NCBI sequences that generate
 python virus_engineer.py
 ```
 
-## Real Viral Sequences
+## NCBI Viral Sequences
 
 ### Coronavirus NL63 (NC_005831.2)
 - **Length**: 28,393 bp
@@ -81,11 +81,3 @@ Each engineered genome includes:
 >Human Coronavirus NL63 (NC_005831.2) | insert_gfp | 28,393 -> 29,113 bp | XbaI
 [Full 29,113 bp engineered genome sequence...]
 ```
-
-## Key Features
-
-- **Realistic**: Uses actual NCBI viral sequences
-- **Full genomes**: Complete viral sequences, not fragments  
-- **Biologically accurate**: Proper genomic regions and restriction sites
-- **NCBI compliant**: Includes accession numbers and proper headers
-- **Clean**: Simple, focused codebase with real data
