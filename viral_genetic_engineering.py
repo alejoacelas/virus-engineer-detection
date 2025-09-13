@@ -7,7 +7,8 @@ Implements 18 types of genetic modifications adapted for viral genomes
 import random
 import json
 import copy
-from virus_sequences_all_orfs import VIRUSES, get_orfs_for_virus, find_orfs_in_region
+import re
+from virus_sequences_all_orfs import VIRUSES, get_orfs_for_virus, find_orfs_in_region, RESTRICTION_SITES
 
 # Common sequences for insertions
 SEQUENCES = {
@@ -41,6 +42,48 @@ class ViralGeneticEngineer:
             self.original_sequence = VIRUSES[virus_name]['sequence']
             self.modified_sequence = self.original_sequence
             self.orfs = VIRUSES[virus_name]['orfs']
+    
+    def find_restriction_sites(self, sequence=None):
+        """Find all restriction sites in the sequence"""
+        if sequence is None:
+            sequence = self.modified_sequence
+        
+        sites = {}
+        for enzyme, pattern in RESTRICTION_SITES.items():
+            # Convert pattern to regex (handle N as wildcard)
+            regex_pattern = pattern.replace('N', '[ATCG]')
+            matches = []
+            
+            for match in re.finditer(regex_pattern, sequence, re.IGNORECASE):
+                matches.append({
+                    'position': match.start(),
+                    'sequence': match.group().upper(),
+                    'enzyme': enzyme
+                })
+            
+            if matches:
+                sites[enzyme] = matches
+        
+        return sites
+    
+    def get_restriction_sites_in_safe_regions(self, avoid_orfs=True):
+        """Get restriction sites that are in safe regions (avoiding ORFs)"""
+        sites = self.find_restriction_sites()
+        safe_regions = self.get_safe_regions(avoid_orfs=avoid_orfs)
+        
+        safe_sites = {}
+        for enzyme, site_list in sites.items():
+            safe_enzyme_sites = []
+            for site in site_list:
+                # Check if site is in any safe region
+                for safe_start, safe_end in safe_regions:
+                    if safe_start <= site['position'] <= safe_end:
+                        safe_enzyme_sites.append(site)
+                        break
+            if safe_enzyme_sites:
+                safe_sites[enzyme] = safe_enzyme_sites
+        
+        return safe_sites
     
     def get_safe_regions(self, avoid_orfs=True, min_gap=100):
         """Get regions safe for modification (between ORFs or non-coding)"""
@@ -81,18 +124,56 @@ class ViralGeneticEngineer:
     
     # Method 1: Region Inversion
     def region_inversion(self, num_inversions=1):
-        """Invert random regions avoiding ORFs"""
+        """Invert regions at restriction sites avoiding ORFs"""
         results = []
         
         for _ in range(num_inversions):
-            safe_regions = self.get_safe_regions()
-            if not safe_regions:
-                continue
+            # Try to use restriction sites first
+            safe_sites = self.get_restriction_sites_in_safe_regions()
             
-            # Select random region
-            region = random.choice(safe_regions)
-            start = random.randint(region[0], region[1] - 100)
-            end = random.randint(start + 50, min(region[1], start + 500))
+            if safe_sites:
+                # Use restriction sites
+                enzyme = random.choice(list(safe_sites.keys()))
+                site = random.choice(safe_sites[enzyme])
+                start = site['position']
+                
+                # Find another restriction site for the end
+                all_sites = []
+                for sites_list in safe_sites.values():
+                    all_sites.extend(sites_list)
+                
+                # Find sites within reasonable distance
+                nearby_sites = [s for s in all_sites if 100 <= abs(s['position'] - start) <= 1000]
+                if nearby_sites:
+                    end_site = random.choice(nearby_sites)
+                    end = end_site['position']
+                    
+                    # Ensure start < end
+                    if start > end:
+                        start, end = end, start
+                    
+                    enzyme_used = enzyme
+                    restriction_approach = True
+                else:
+                    # Fallback to random positioning
+                    safe_regions = self.get_safe_regions()
+                    if not safe_regions:
+                        continue
+                    region = random.choice(safe_regions)
+                    start = random.randint(region[0], region[1] - 100)
+                    end = random.randint(start + 50, min(region[1], start + 500))
+                    enzyme_used = "Random"
+                    restriction_approach = False
+            else:
+                # Fallback to random positioning
+                safe_regions = self.get_safe_regions()
+                if not safe_regions:
+                    continue
+                region = random.choice(safe_regions)
+                start = random.randint(region[0], region[1] - 100)
+                end = random.randint(start + 50, min(region[1], start + 500))
+                enzyme_used = "Random"
+                restriction_approach = False
             
             # Invert the sequence
             inverted = self.modified_sequence[start:end][::-1]
@@ -106,7 +187,9 @@ class ViralGeneticEngineer:
                 'start': start,
                 'end': end,
                 'length': end - start,
-                'inverted_sequence': inverted[:50] + '...' if len(inverted) > 50 else inverted
+                'inverted_sequence': inverted[:50] + '...' if len(inverted) > 50 else inverted,
+                'enzyme': enzyme_used,
+                'restriction_site_used': restriction_approach
             }
             results.append(result)
             
@@ -115,29 +198,76 @@ class ViralGeneticEngineer:
     
     # Method 2: Region Duplication
     def region_duplication(self, num_duplications=1):
-        """Duplicate random regions and insert elsewhere"""
+        """Duplicate regions at restriction sites and insert elsewhere"""
         results = []
         
         for _ in range(num_duplications):
-            safe_regions = self.get_safe_regions()
-            if len(safe_regions) < 2:
-                continue
+            # Try to use restriction sites first
+            safe_sites = self.get_restriction_sites_in_safe_regions()
             
-            # Source region
-            source_region = random.choice(safe_regions)
-            start = random.randint(source_region[0], source_region[1] - 100)
-            end = random.randint(start + 50, min(source_region[1], start + 300))
+            if safe_sites:
+                # Use restriction sites for source region
+                enzyme = random.choice(list(safe_sites.keys()))
+                site = random.choice(safe_sites[enzyme])
+                start = site['position']
+                
+                # Find another restriction site for the end
+                all_sites = []
+                for sites_list in safe_sites.values():
+                    all_sites.extend(sites_list)
+                
+                # Find sites within reasonable distance
+                nearby_sites = [s for s in all_sites if 50 <= abs(s['position'] - start) <= 500]
+                if nearby_sites:
+                    end_site = random.choice(nearby_sites)
+                    end = end_site['position']
+                    
+                    # Ensure start < end
+                    if start > end:
+                        start, end = end, start
+                    
+                    enzyme_used = enzyme
+                    restriction_approach = True
+                else:
+                    # Fallback to random positioning
+                    safe_regions = self.get_safe_regions()
+                    if len(safe_regions) < 2:
+                        continue
+                    source_region = random.choice(safe_regions)
+                    start = random.randint(source_region[0], source_region[1] - 100)
+                    end = random.randint(start + 50, min(source_region[1], start + 300))
+                    enzyme_used = "Random"
+                    restriction_approach = False
+            else:
+                # Fallback to random positioning
+                safe_regions = self.get_safe_regions()
+                if len(safe_regions) < 2:
+                    continue
+                source_region = random.choice(safe_regions)
+                start = random.randint(source_region[0], source_region[1] - 100)
+                end = random.randint(start + 50, min(source_region[1], start + 300))
+                enzyme_used = "Random"
+                restriction_approach = False
             
             # Sequence to duplicate
             dup_sequence = self.modified_sequence[start:end]
             
-            # Target region (different from source)
-            target_regions = [r for r in safe_regions if r != source_region]
-            if not target_regions:
-                continue
-                
-            target_region = random.choice(target_regions)
-            insert_pos = random.randint(target_region[0], target_region[1])
+            # Find insertion site (use restriction sites if available)
+            if safe_sites and restriction_approach:
+                # Use restriction sites for insertion
+                insert_enzyme = random.choice(list(safe_sites.keys()))
+                insert_site = random.choice(safe_sites[insert_enzyme])
+                insert_pos = insert_site['position']
+                insert_enzyme_used = insert_enzyme
+            else:
+                # Use random positioning for insertion
+                safe_regions = self.get_safe_regions()
+                target_regions = [r for r in safe_regions if r != (start, end)]
+                if not target_regions:
+                    continue
+                target_region = random.choice(target_regions)
+                insert_pos = random.randint(target_region[0], target_region[1])
+                insert_enzyme_used = "Random"
             
             # Insert duplication
             self.modified_sequence = (
@@ -151,7 +281,10 @@ class ViralGeneticEngineer:
                 'source_end': end,
                 'insert_position': insert_pos,
                 'duplicated_length': len(dup_sequence),
-                'duplicated_sequence': dup_sequence[:50] + '...' if len(dup_sequence) > 50 else dup_sequence
+                'duplicated_sequence': dup_sequence[:50] + '...' if len(dup_sequence) > 50 else dup_sequence,
+                'source_enzyme': enzyme_used,
+                'insert_enzyme': insert_enzyme_used,
+                'restriction_site_used': restriction_approach
             }
             results.append(result)
             
@@ -160,18 +293,58 @@ class ViralGeneticEngineer:
     
     # Method 3: Region Deletion
     def region_deletion(self, num_deletions=1):
-        """Delete random regions avoiding ORFs"""
+        """Delete regions at restriction sites avoiding ORFs"""
         results = []
         
         for _ in range(num_deletions):
-            safe_regions = self.get_safe_regions()
-            if not safe_regions:
-                continue
+            # Try to use restriction sites first
+            safe_sites = self.get_restriction_sites_in_safe_regions()
             
-            region = random.choice(safe_regions)
-            start = random.randint(region[0], region[1] - 50)
-            length = random.randint(20, min(200, region[1] - start))
-            end = start + length
+            if safe_sites:
+                # Use restriction sites
+                enzyme = random.choice(list(safe_sites.keys()))
+                site = random.choice(safe_sites[enzyme])
+                start = site['position']
+                
+                # Find another restriction site for the end
+                all_sites = []
+                for sites_list in safe_sites.values():
+                    all_sites.extend(sites_list)
+                
+                # Find sites within reasonable distance
+                nearby_sites = [s for s in all_sites if 20 <= abs(s['position'] - start) <= 300]
+                if nearby_sites:
+                    end_site = random.choice(nearby_sites)
+                    end = end_site['position']
+                    
+                    # Ensure start < end
+                    if start > end:
+                        start, end = end, start
+                    
+                    enzyme_used = enzyme
+                    restriction_approach = True
+                else:
+                    # Fallback to random positioning
+                    safe_regions = self.get_safe_regions()
+                    if not safe_regions:
+                        continue
+                    region = random.choice(safe_regions)
+                    start = random.randint(region[0], region[1] - 50)
+                    length = random.randint(20, min(200, region[1] - start))
+                    end = start + length
+                    enzyme_used = "Random"
+                    restriction_approach = False
+            else:
+                # Fallback to random positioning
+                safe_regions = self.get_safe_regions()
+                if not safe_regions:
+                    continue
+                region = random.choice(safe_regions)
+                start = random.randint(region[0], region[1] - 50)
+                length = random.randint(20, min(200, region[1] - start))
+                end = start + length
+                enzyme_used = "Random"
+                restriction_approach = False
             
             # Store deleted sequence
             deleted_sequence = self.modified_sequence[start:end]
@@ -185,8 +358,10 @@ class ViralGeneticEngineer:
             result = {
                 'start': start,
                 'end': end,
-                'length': length,
-                'deleted_sequence': deleted_sequence[:50] + '...' if len(deleted_sequence) > 50 else deleted_sequence
+                'length': end - start,
+                'deleted_sequence': deleted_sequence[:50] + '...' if len(deleted_sequence) > 50 else deleted_sequence,
+                'enzyme': enzyme_used,
+                'restriction_site_used': restriction_approach
             }
             results.append(result)
             

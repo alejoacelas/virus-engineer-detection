@@ -205,10 +205,11 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-# Large generated datasets
+# Large generated datasets - exclude only the engineered sequences
 restriction_genomes/
 restriction_virus_engineered.json
-*.fasta
+engineered_sequences/
+robust_engineered_sequences/
 
 # Python cache
 __pycache__/

@@ -8,12 +8,13 @@ import os
 import json
 import random
 import time
+import re
 from datetime import datetime
-from virus_sequences_all_orfs import VIRUSES
+from virus_sequences_all_orfs import VIRUSES, RESTRICTION_SITES
 from viral_genetic_engineering import ViralGeneticEngineer
 
-class RobustViralSequenceGenerator:
-    def __init__(self, output_dir="robust_engineered_sequences"):
+class ViralSequenceGenerator:
+    def __init__(self, output_dir="engineered_sequences"):
         self.output_dir = output_dir
         self.engineering = ViralGeneticEngineer()
         self.methods = [
@@ -26,6 +27,72 @@ class RobustViralSequenceGenerator:
         
         # Create output directory
         os.makedirs(output_dir, exist_ok=True)
+    
+    def find_restriction_sites(self, sequence):
+        """Find all restriction sites in the sequence"""
+        sites = {}
+        for enzyme, pattern in RESTRICTION_SITES.items():
+            # Convert pattern to regex (handle N as wildcard)
+            regex_pattern = pattern.replace('N', '[ATCG]')
+            matches = []
+            
+            for match in re.finditer(regex_pattern, sequence, re.IGNORECASE):
+                matches.append({
+                    'position': match.start(),
+                    'sequence': match.group().upper(),
+                    'enzyme': enzyme
+                })
+            
+            if matches:
+                sites[enzyme] = matches
+        
+        return sites
+    
+    def get_safe_regions(self, orfs, sequence_length):
+        """Get regions safe for modification (between ORFs)"""
+        if not orfs:
+            # If no ORFs, return some random safe regions
+            return [(100, 200), (sequence_length//2, sequence_length//2 + 100), (sequence_length - 200, sequence_length - 100)]
+        
+        safe_regions = []
+        sorted_orfs = sorted(orfs, key=lambda x: x['start'])
+        
+        # Region before first ORF
+        if sorted_orfs[0]['start'] > 100:
+            safe_regions.append((50, sorted_orfs[0]['start'] - 50))
+        
+        # Gaps between ORFs
+        for i in range(len(sorted_orfs) - 1):
+            gap_start = sorted_orfs[i]['end'] + 50
+            gap_end = sorted_orfs[i + 1]['start'] - 50
+            if gap_end - gap_start >= 100:
+                safe_regions.append((gap_start, gap_end))
+        
+        # Region after last ORF
+        last_orf_end = sorted_orfs[-1]['end']
+        if sequence_length - last_orf_end > 100:
+            safe_regions.append((last_orf_end + 50, sequence_length - 50))
+        
+        return safe_regions
+    
+    def get_restriction_sites_in_safe_regions(self, sequence, orfs):
+        """Get restriction sites that are in safe regions (avoiding ORFs)"""
+        sites = self.find_restriction_sites(sequence)
+        safe_regions = self.get_safe_regions(orfs, len(sequence))
+        
+        safe_sites = {}
+        for enzyme, site_list in sites.items():
+            safe_enzyme_sites = []
+            for site in site_list:
+                # Check if site is in any safe region
+                for safe_start, safe_end in safe_regions:
+                    if safe_start <= site['position'] <= safe_end:
+                        safe_enzyme_sites.append(site)
+                        break
+            if safe_enzyme_sites:
+                safe_sites[enzyme] = safe_enzyme_sites
+        
+        return safe_sites
         
     def generate_sequences_with_fallback(self, virus_key, virus_info, target_count=1000):
         """Generate sequences with biological feasibility fallbacks"""
@@ -41,7 +108,7 @@ class RobustViralSequenceGenerator:
             while method_counts[method] < target_per_method and attempts < max_attempts:
                 try:
                     # Apply biological feasibility randomness
-                    result = self._apply_method_with_randomness(virus_key, virus_info, method, attempts)
+                    result = self.apply_method_with_randomness(virus_key, virus_info, method, attempts)
                     
                     if result:
                         sequences.append(result)
@@ -57,7 +124,7 @@ class RobustViralSequenceGenerator:
         while len(sequences) < target_count:
             fallback_method = random.choice(['region_inversion', 'region_deletion', 'gene_deletion', 'frameshift_mutations'])
             try:
-                result = self._apply_method_with_randomness(virus_key, virus_info, fallback_method, len(sequences))
+                result = self.apply_method_with_randomness(virus_key, virus_info, fallback_method, len(sequences))
                 if result:
                     sequences.append(result)
                     method_counts[fallback_method] += 1
@@ -66,7 +133,7 @@ class RobustViralSequenceGenerator:
                 
         return sequences[:target_count], method_counts
     
-    def _apply_method_with_randomness(self, virus_key, virus_info, method, attempt_num):
+    def apply_method_with_randomness(self, virus_key, virus_info, method, attempt_num):
         """Apply engineering method with biological feasibility randomness"""
         sequence = virus_info['sequence']
         orfs = virus_info.get('orfs', [])
@@ -79,55 +146,100 @@ class RobustViralSequenceGenerator:
         }
         
         if method == 'region_inversion':
-            return self._robust_region_inversion(sequence, orfs, randomness_factors)
+            return self.region_inversion(sequence, orfs, randomness_factors)
         elif method == 'region_duplication':
-            return self._robust_region_duplication(sequence, orfs, randomness_factors)
+            return self.region_duplication(sequence, orfs, randomness_factors)
         elif method == 'region_deletion':
-            return self._robust_region_deletion(sequence, orfs, randomness_factors)
+            return self.region_deletion(sequence, orfs, randomness_factors)
         elif method == 'gene_deletion':
-            return self._robust_gene_deletion(sequence, orfs, randomness_factors)
+            return self.gene_deletion(sequence, orfs, randomness_factors)
         elif method == 'homing_endonuclease':
-            return self._robust_homing_endonuclease(sequence, orfs, randomness_factors)
+            return self.homing_endonuclease(sequence, orfs, randomness_factors)
         elif method == 'gfp_insertion':
-            return self._robust_gfp_insertion(sequence, orfs, randomness_factors)
+            return self.gfp_insertion(sequence, orfs, randomness_factors)
         elif method == 'crispr_gfp':
-            return self._robust_crispr_gfp(sequence, orfs, randomness_factors)
+            return self.crispr_gfp(sequence, orfs, randomness_factors)
         elif method == 'gene_start_deletion':
-            return self._robust_gene_start_deletion(sequence, orfs, randomness_factors)
+            return self.gene_start_deletion(sequence, orfs, randomness_factors)
         elif method == 'gene_end_deletion':
-            return self._robust_gene_end_deletion(sequence, orfs, randomness_factors)
+            return self.gene_end_deletion(sequence, orfs, randomness_factors)
         elif method == 'frameshift_mutations':
-            return self._robust_frameshift_mutations(sequence, orfs, randomness_factors)
+            return self.frameshift_mutations(sequence, orfs, randomness_factors)
         elif method == 'phosphorylation_inhibition':
-            return self._robust_phosphorylation_inhibition(sequence, orfs, randomness_factors)
+            return self.phosphorylation_inhibition(sequence, orfs, randomness_factors)
         elif method == 'igem_gfp':
-            return self._robust_igem_gfp(sequence, orfs, randomness_factors)
+            return self.igem_gfp(sequence, orfs, randomness_factors)
         elif method == 'moclo_construct':
-            return self._robust_moclo_construct(sequence, orfs, randomness_factors)
+            return self.moclo_construct(sequence, orfs, randomness_factors)
             
         return None
     
-    def _robust_region_inversion(self, sequence, orfs, factors):
-        """Robust region inversion with biological feasibility"""
+    def region_inversion(self, sequence, orfs, factors):
+        """Region inversion using restriction sites with biological feasibility"""
         genome_len = len(sequence)
         
-        # Calculate region size with variance
-        base_size = min(500, genome_len // 10)
-        region_size = int(base_size * factors['region_size_variance'])
-        region_size = max(100, min(region_size, genome_len // 4))
+        # Try to use restriction sites first
+        safe_sites = self.get_restriction_sites_in_safe_regions(sequence, orfs)
         
-        # Find safe region with position tolerance
-        tolerance = factors['position_tolerance']
-        safe_start = tolerance
-        safe_end = genome_len - tolerance - region_size
-        
-        if safe_end <= safe_start:
-            # Fallback: use smaller region
-            region_size = genome_len // 8
-            safe_end = genome_len - region_size
+        if safe_sites:
+            # Use restriction sites
+            enzyme = random.choice(list(safe_sites.keys()))
+            site = random.choice(safe_sites[enzyme])
+            start = site['position']
             
-        start = random.randint(safe_start, safe_end)
-        end = start + region_size
+            # Find another restriction site for the end
+            all_sites = []
+            for sites_list in safe_sites.values():
+                all_sites.extend(sites_list)
+            
+            # Find sites within reasonable distance
+            nearby_sites = [s for s in all_sites if 100 <= abs(s['position'] - start) <= 1000]
+            if nearby_sites:
+                end_site = random.choice(nearby_sites)
+                end = end_site['position']
+                
+                # Ensure start < end
+                if start > end:
+                    start, end = end, start
+                
+                enzyme_used = enzyme
+                restriction_approach = True
+            else:
+                # Fallback to random positioning
+                base_size = min(500, genome_len // 10)
+                region_size = int(base_size * factors['region_size_variance'])
+                region_size = max(100, min(region_size, genome_len // 4))
+                
+                tolerance = factors['position_tolerance']
+                safe_start = tolerance
+                safe_end = genome_len - tolerance - region_size
+                
+                if safe_end <= safe_start:
+                    region_size = genome_len // 8
+                    safe_end = genome_len - region_size
+                    
+                start = random.randint(safe_start, safe_end)
+                end = start + region_size
+                enzyme_used = "Random"
+                restriction_approach = False
+        else:
+            # Fallback to random positioning
+            base_size = min(500, genome_len // 10)
+            region_size = int(base_size * factors['region_size_variance'])
+            region_size = max(100, min(region_size, genome_len // 4))
+            
+            tolerance = factors['position_tolerance']
+            safe_start = tolerance
+            safe_end = genome_len - tolerance - region_size
+            
+            if safe_end <= safe_start:
+                region_size = genome_len // 8
+                safe_end = genome_len - region_size
+                
+            start = random.randint(safe_start, safe_end)
+            end = start + region_size
+            enzyme_used = "Random"
+            restriction_approach = False
         
         # Perform inversion
         inverted_region = sequence[start:end][::-1]
@@ -143,35 +255,83 @@ class RobustViralSequenceGenerator:
                 'method': 'region_inversion',
                 'start_position': start,
                 'end_position': end,
-                'length': region_size,
+                'length': end - start,
                 'details': {
                     'original_sequence': sequence[start:end],
                     'inverted_sequence': inverted_region,
+                    'enzyme': enzyme_used,
+                    'restriction_site_used': restriction_approach,
                     'randomness_factors': factors
                 }
             }]
         }
     
-    def _robust_region_deletion(self, sequence, orfs, factors):
-        """Robust region deletion with biological feasibility"""
+    def region_deletion(self, sequence, orfs, factors):
+        """Region deletion using restriction sites with biological feasibility"""
         genome_len = len(sequence)
         
-        # Calculate deletion size with variance
-        base_size = min(300, genome_len // 15)
-        deletion_size = int(base_size * factors['region_size_variance'])
-        deletion_size = max(50, min(deletion_size, genome_len // 6))
+        # Try to use restriction sites first
+        safe_sites = self.get_restriction_sites_in_safe_regions(sequence, orfs)
         
-        # Find safe deletion region
-        tolerance = factors['position_tolerance']
-        safe_start = tolerance
-        safe_end = genome_len - tolerance - deletion_size
-        
-        if safe_end <= safe_start:
-            deletion_size = genome_len // 10
-            safe_end = genome_len - deletion_size
+        if safe_sites:
+            # Use restriction sites
+            enzyme = random.choice(list(safe_sites.keys()))
+            site = random.choice(safe_sites[enzyme])
+            start = site['position']
             
-        start = random.randint(safe_start, safe_end)
-        end = start + deletion_size
+            # Find another restriction site for the end
+            all_sites = []
+            for sites_list in safe_sites.values():
+                all_sites.extend(sites_list)
+            
+            # Find sites within reasonable distance
+            nearby_sites = [s for s in all_sites if 20 <= abs(s['position'] - start) <= 300]
+            if nearby_sites:
+                end_site = random.choice(nearby_sites)
+                end = end_site['position']
+                
+                # Ensure start < end
+                if start > end:
+                    start, end = end, start
+                
+                enzyme_used = enzyme
+                restriction_approach = True
+            else:
+                # Fallback to random positioning
+                base_size = min(300, genome_len // 15)
+                deletion_size = int(base_size * factors['region_size_variance'])
+                deletion_size = max(50, min(deletion_size, genome_len // 6))
+                
+                tolerance = factors['position_tolerance']
+                safe_start = tolerance
+                safe_end = genome_len - tolerance - deletion_size
+                
+                if safe_end <= safe_start:
+                    deletion_size = genome_len // 10
+                    safe_end = genome_len - deletion_size
+                    
+                start = random.randint(safe_start, safe_end)
+                end = start + deletion_size
+                enzyme_used = "Random"
+                restriction_approach = False
+        else:
+            # Fallback to random positioning
+            base_size = min(300, genome_len // 15)
+            deletion_size = int(base_size * factors['region_size_variance'])
+            deletion_size = max(50, min(deletion_size, genome_len // 6))
+            
+            tolerance = factors['position_tolerance']
+            safe_start = tolerance
+            safe_end = genome_len - tolerance - deletion_size
+            
+            if safe_end <= safe_start:
+                deletion_size = genome_len // 10
+                safe_end = genome_len - deletion_size
+                
+            start = random.randint(safe_start, safe_end)
+            end = start + deletion_size
+            enzyme_used = "Random"
+            restriction_approach = False
         
         # Perform deletion
         new_sequence = sequence[:start] + sequence[end:]
@@ -181,24 +341,26 @@ class RobustViralSequenceGenerator:
             'method': 'region_deletion',
             'method_name': 'Region Deletion',
             'full_sequence': new_sequence,
-            'length_change': -deletion_size,
+            'length_change': -(end - start),
             'modifications': [{
                 'method': 'region_deletion',
                 'start_position': start,
                 'end_position': end,
-                'length': -deletion_size,
+                'length': -(end - start),
                 'details': {
                     'deleted_sequence': sequence[start:end],
+                    'enzyme': enzyme_used,
+                    'restriction_site_used': restriction_approach,
                     'randomness_factors': factors
                 }
             }]
         }
     
-    def _robust_gene_deletion(self, sequence, orfs, factors):
-        """Robust partial gene deletion (10-50%) with biological feasibility"""
+    def gene_deletion(self, sequence, orfs, factors):
+        """Partial gene deletion (10-50%) with biological feasibility"""
         if not orfs:
             # Fallback: delete random region
-            return self._robust_region_deletion(sequence, orfs, factors)
+            return self.region_deletion(sequence, orfs, factors)
         
         # Select random ORF with biological constraints
         safe_orfs = []
@@ -209,7 +371,7 @@ class RobustViralSequenceGenerator:
                 safe_orfs.append(orf)
         
         if not safe_orfs:
-            return self._robust_region_deletion(sequence, orfs, factors)
+            return self.region_deletion(sequence, orfs, factors)
         
         selected_orf = random.choice(safe_orfs)
         gene_start = selected_orf['start']
@@ -265,16 +427,16 @@ class RobustViralSequenceGenerator:
             }]
         }
     
-    def _robust_frameshift_mutations(self, sequence, orfs, factors):
+    def frameshift_mutations(self, sequence, orfs, factors):
         """Robust frameshift mutations with biological feasibility"""
         if not orfs:
             # Fallback: random insertion/deletion
-            return self._robust_random_indel(sequence, factors)
+            return self.random_indel(sequence, factors)
         
         # Select random ORF
         safe_orfs = [orf for orf in orfs if orf['end'] - orf['start'] > 100]
         if not safe_orfs:
-            return self._robust_random_indel(sequence, factors)
+            return self.random_indel(sequence, factors)
         
         selected_orf = random.choice(safe_orfs)
         orf_start = selected_orf['start']
@@ -320,7 +482,7 @@ class RobustViralSequenceGenerator:
             }]
         }
     
-    def _robust_random_indel(self, sequence, factors):
+    def random_indel(self, sequence, factors):
         """Fallback random indel when no ORFs available"""
         genome_len = len(sequence)
         position = random.randint(100, genome_len - 100)
@@ -355,32 +517,32 @@ class RobustViralSequenceGenerator:
         }
     
     # Placeholder methods for other engineering types
-    def _robust_region_duplication(self, sequence, orfs, factors):
-        return self._robust_region_inversion(sequence, orfs, factors)
+    def region_duplication(self, sequence, orfs, factors):
+        return self.region_inversion(sequence, orfs, factors)
     
-    def _robust_homing_endonuclease(self, sequence, orfs, factors):
-        return self._robust_gene_deletion(sequence, orfs, factors)
+    def homing_endonuclease(self, sequence, orfs, factors):
+        return self.gene_deletion(sequence, orfs, factors)
     
-    def _robust_gfp_insertion(self, sequence, orfs, factors):
-        return self._robust_region_deletion(sequence, orfs, factors)
+    def gfp_insertion(self, sequence, orfs, factors):
+        return self.region_deletion(sequence, orfs, factors)
     
-    def _robust_crispr_gfp(self, sequence, orfs, factors):
-        return self._robust_gfp_insertion(sequence, orfs, factors)
+    def crispr_gfp(self, sequence, orfs, factors):
+        return self.gfp_insertion(sequence, orfs, factors)
     
-    def _robust_gene_start_deletion(self, sequence, orfs, factors):
-        return self._robust_gene_deletion(sequence, orfs, factors)
+    def gene_start_deletion(self, sequence, orfs, factors):
+        return self.gene_deletion(sequence, orfs, factors)
     
-    def _robust_gene_end_deletion(self, sequence, orfs, factors):
-        return self._robust_gene_deletion(sequence, orfs, factors)
+    def gene_end_deletion(self, sequence, orfs, factors):
+        return self.gene_deletion(sequence, orfs, factors)
     
-    def _robust_phosphorylation_inhibition(self, sequence, orfs, factors):
-        return self._robust_frameshift_mutations(sequence, orfs, factors)
+    def phosphorylation_inhibition(self, sequence, orfs, factors):
+        return self.frameshift_mutations(sequence, orfs, factors)
     
-    def _robust_igem_gfp(self, sequence, orfs, factors):
-        return self._robust_gfp_insertion(sequence, orfs, factors)
+    def igem_gfp(self, sequence, orfs, factors):
+        return self.gfp_insertion(sequence, orfs, factors)
     
-    def _robust_moclo_construct(self, sequence, orfs, factors):
-        return self._robust_gfp_insertion(sequence, orfs, factors)
+    def moclo_construct(self, sequence, orfs, factors):
+        return self.gfp_insertion(sequence, orfs, factors)
     
     def save_sequences(self, virus_key, sequences, method_counts):
         """Save sequences in JSON and FASTA formats with modification coordinates in JSON"""
@@ -498,5 +660,5 @@ class RobustViralSequenceGenerator:
         print("  Summary: Complete generation statistics")
 
 if __name__ == "__main__":
-    generator = RobustViralSequenceGenerator()
+    generator = ViralSequenceGenerator()
     generator.generate_all_sequences(target_per_virus=1000)
