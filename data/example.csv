@@ -1,6 +1,0 @@
-sequence_id, sequence, label, bacterial_resistance_ampicillin, bacterial_resistance_chloramphenicol, bacterial_resistance_kanamycin, bacterial_resistance_other, bacterial_resistance_spectinomycin, copy_number_high_copy, copy_number_low_copy, copy_number_unknown, growth_strain_ccdb_survival, ..., species_budding_yeast, species_fly, species_human, species_mouse, species_mustard_weed, species_nematode, species_other, species_rat, species_synthetic, species_zebrafish
-9ZIMC, CATGCATTAGTTATTAATAGTAATCAATTACGGGGTCATTAGTTCA, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, ..., 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-5SAQC, GCTGGATGGTTTGGGACATGTGCAGCCCCGTCTCTGTATGGAGTGA, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, ..., 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-E7QRO, NNCCGGGCTGTAGCTACACAGGGCGGAGATGAGAGCCCTACGAAAG, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, ..., 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-CT5FP, GCGGAGATGAAGAGCCCTACGAAAGCTGAGCCTGCGACTCCCGCAG, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, ..., 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-7PTD8, CGCGCATTACTTCACATGGTCCTCAAGGGTAACATGAAAGTGATCC, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, ..., 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
