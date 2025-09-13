@@ -1,0 +1,161 @@
+{
+  "experiment_id": "20250913_093035",
+  "timestamp": "2025-09-13T09:31:05.788711",
+  "model_name": "cnn",
+  "data_params": {
+    "n_samples": 20000,
+    "engineering_fraction_train": 0.5,
+    "engineering_fraction_test": 0.02,
+    "methods": [
+      "random_replacement",
+      "codon_optimization",
+      "motif_insertion"
+    ],
+    "train_size": 16000,
+    "test_size": 4000
+  },
+  "model_params": {
+    "max_len": 200,
+    "epochs": 10,
+    "batch_size": 32,
+    "use_improved": false
+  },
+  "results": {
+    "overall": {
+      "model": {
+        "accuracy": 0.872,
+        "precision": 0.10294117647058823,
+        "recall": 0.7
+      },
+      "naive": {
+        "accuracy": 0.9625,
+        "precision": 0.05128205128205128,
+        "recall": 0.05
+      },
+      "positive_fraction": 0.02
+    },
+    "by_engineering_method": {
+      "model": {
+        "accuracy": 0.872,
+        "precision": 0.10294117647058823,
+        "recall": 0.7
+      },
+      "naive": {
+        "accuracy": 0.9625,
+        "precision": 0.05128205128205128,
+        "recall": 0.05
+      },
+      "positive_fraction": 0.02,
+      "subgroups": {
+        "model": {
+          "natural": {
+            "accuracy": 0.8755102040816326,
+            "precision": 0.0,
+            "recall": 0.0,
+            "n_samples": "3920"
+          },
+          "codon_optimization": {
+            "accuracy": 0.9583333333333334,
+            "precision": 1.0,
+            "recall": 0.9583333333333334,
+            "n_samples": "24"
+          },
+          "random_replacement": {
+            "accuracy": 0.5333333333333333,
+            "precision": 1.0,
+            "recall": 0.5333333333333333,
+            "n_samples": "30"
+          },
+          "motif_insertion": {
+            "accuracy": 0.6538461538461539,
+            "precision": 1.0,
+            "recall": 0.6538461538461539,
+            "n_samples": "26"
+          }
+        },
+        "naive": {
+          "natural": {
+            "accuracy": 0.9811224489795919,
+            "precision": 0.0,
+            "recall": 0.0,
+            "n_samples": "3920"
+          },
+          "codon_optimization": {
+            "accuracy": 0.041666666666666664,
+            "precision": 1.0,
+            "recall": 0.041666666666666664,
+            "n_samples": "24"
+          },
+          "random_replacement": {
+            "accuracy": 0.03333333333333333,
+            "precision": 1.0,
+            "recall": 0.03333333333333333,
+            "n_samples": "30"
+          },
+          "motif_insertion": {
+            "accuracy": 0.07692307692307693,
+            "precision": 1.0,
+            "recall": 0.07692307692307693,
+            "n_samples": "26"
+          }
+        }
+      }
+    },
+    "by_length_bin": {
+      "model": {
+        "accuracy": 0.872,
+        "precision": 0.10294117647058823,
+        "recall": 0.7
+      },
+      "naive": {
+        "accuracy": 0.9625,
+        "precision": 0.05128205128205128,
+        "recall": 0.05
+      },
+      "positive_fraction": 0.02,
+      "subgroups": {
+        "model": {
+          "medium": {
+            "accuracy": 0.8713545042125729,
+            "precision": 0.10514018691588785,
+            "recall": 0.7627118644067796,
+            "n_samples": "3086"
+          },
+          "long": {
+            "accuracy": 0.8641025641025641,
+            "precision": 0.12280701754385964,
+            "recall": 0.7,
+            "n_samples": "390"
+          },
+          "short": {
+            "accuracy": 0.8816793893129771,
+            "precision": 0.06779661016949153,
+            "recall": 0.36363636363636365,
+            "n_samples": "524"
+          }
+        },
+        "naive": {
+          "medium": {
+            "accuracy": 0.9627349319507453,
+            "precision": 0.0625,
+            "recall": 0.06779661016949153,
+            "n_samples": "3086"
+          },
+          "long": {
+            "accuracy": 0.9564102564102565,
+            "precision": 0.0,
+            "recall": 0.0,
+            "n_samples": "390"
+          },
+          "short": {
+            "accuracy": 0.9656488549618321,
+            "precision": 0.0,
+            "recall": 0.0,
+            "n_samples": "524"
+          }
+        }
+      }
+    }
+  },
+  "user_notes": "Automated test run"
+}
