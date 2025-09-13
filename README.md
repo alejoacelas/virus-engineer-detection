@@ -12,7 +12,7 @@ A more realistic virus engineering pipeline using 25 NCBI whole genome sequences
 
 ## Files
 
-- `enhanced_sequence_generator.py` - Main sequence generation system with biological realism
+- `enhanced_sequence_generator.py` - Main sequence generator with ORFs
 - `viral_genetic_engineering.py` - Core engineering methods with partial gene deletion
 - `virus_sequences_all_orfs.py` - NCBI sequence loader with ORF annotations
 - `all_virus_annotations.json` - Parsed GenBank ORF annotations for all viruses
