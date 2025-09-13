@@ -32,12 +32,11 @@ def run_experiment(csv_path="data/viral_genome_df_prelim.csv", n_samples=5000,
         methods=methods
     )
 
-    # Create test dataset with 0.02 engineering fraction
     print("\n2. Creating test dataset...")
     test_data = create_engineering_dataset(
         csv_path=csv_path,
         n_samples=int(n_samples * 0.2),  # 20% for testing
-        engineering_fraction=0.02,
+        engineering_fraction=engineering_fraction,
         methods=methods
     )
 
@@ -56,7 +55,7 @@ def run_experiment(csv_path="data/viral_genome_df_prelim.csv", n_samples=5000,
     data_params = {
         'n_samples': n_samples,
         'engineering_fraction_train': 0.5,
-        'engineering_fraction_test': 0.02,
+        'engineering_fraction_test': engineering_fraction,
         'methods': methods,
         'train_size': len(train_data),
         'test_size': len(test_data)
@@ -147,6 +146,6 @@ def run_experiment(csv_path="data/viral_genome_df_prelim.csv", n_samples=5000,
 if __name__ == "__main__":
     experiment_id, results = run_experiment(
         n_samples=20_000,
-        engineering_fraction=0.02,
+        engineering_fraction=0.5,
         methods=['random_replacement', 'codon_optimization', 'motif_insertion']
     )
