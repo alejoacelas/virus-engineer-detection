@@ -88,7 +88,7 @@ def evaluate_model_performance(y_true, y_pred, metadata_df=None, y_proba=None):
 
     # Subgroup analysis if metadata available
     if metadata_df is not None:
-        for col in ['engineering_method', 'length_bin']:
+        for col in ['engineering_method', 'length_bin', 'virus_key', 'virus_family']:
             if col in metadata_df.columns:
                 subgroup_results = compare_with_naive(
                     y_true, y_pred, metadata_df[col], y_proba
