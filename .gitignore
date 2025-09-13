@@ -1,6 +1,12 @@
 
 
-data/restriction_virus_engineered.json
+data/**/*.json
+data/**/*.csv
+data/**/*.fasta
+data/**/*.txt
+data/**/*.pdf
+data/**/*.docx
+data/**/*.doc
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

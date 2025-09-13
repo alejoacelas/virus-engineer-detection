@@ -76,15 +76,15 @@ def run_experiment(csv_path="data/viral_genome_df_prelim.csv", n_samples=5000,
     print("K-mer Results:")
     print_metrics_comparison(kmer_eval['overall'])
 
-    print("\nRunning BLAST-based Baseline...")
-    blast_results = run_blast_baseline(X_train, X_test, y_train, y_test)
-    blast_eval = evaluate_model_performance(
-        y_test.values, blast_results['y_test_pred'], test_data, blast_results['y_test_proba']
-    )
-    models_results['blast'] = {'results': blast_results, 'evaluation': blast_eval}
+    # print("\nRunning BLAST-based Baseline...")
+    # blast_results = run_blast_baseline(X_train, X_test, y_train, y_test)
+    # blast_eval = evaluate_model_performance(
+    #     y_test.values, blast_results['y_test_pred'], test_data, blast_results['y_test_proba']
+    # )
+    # models_results['blast'] = {'results': blast_results, 'evaluation': blast_eval}
 
-    print("BLAST Results:")
-    print_metrics_comparison(blast_eval['overall'])
+    # print("BLAST Results:")
+    # print_metrics_comparison(blast_eval['overall'])
 
     # # Multi K-mer baseline
     # print("\nTraining Multi-K-mer Baseline...")
