@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """
-Enhanced Viral Sequence Generator with Biological Feasibility Randomness
 Generates 1000 engineered sequences per virus with realistic biological constraints
 """
 

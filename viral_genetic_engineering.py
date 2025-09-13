@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """
-Viral Genetic Engineering Simulation System
 Implements 18 types of genetic modifications adapted for viral genomes
 """
 
