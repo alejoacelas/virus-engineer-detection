@@ -1,6 +1,6 @@
 # Comprehensive Virus Engineering System
 
-A realistic virus engineering pipeline using 28 NCBI whole genome sequences that generates reproducible datasets with 10 different genetic engineering methods targeting restriction sites.
+A more realistic virus engineering pipeline using 28 NCBI whole genome sequences that generates reproducible datasets with 10 different genetic engineering methods targeting restriction sites.
 
 ## 🧬 Features
 
