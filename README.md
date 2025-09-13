@@ -2,7 +2,7 @@
 
 A more realistic virus engineering pipeline using 25 NCBI whole genome sequences that generates reproducible datasets with 13 different genetic engineering methods.
 
-## 🧬 Features
+##  Features
 
 - **25 NCBI Viruses**: Coronavirus, Adenovirus, Herpesvirus, and more (complete genomes only)
 - **13 Engineering Methods**: Region inversion, duplication, deletion, partial gene deletion, GFP insertion, frameshift mutations, CRISPR simulation
@@ -10,9 +10,9 @@ A more realistic virus engineering pipeline using 25 NCBI whole genome sequences
 - **Full Genomes**: Complete viral sequences (6K-200K bp) with modification coordinates
 - **Balanced Datasets**: 1000 examples per virus with balanced method distribution
 
-## 📁 Files
+## Files
 
-- `enhanced_sequence_generator.py` - Main sequence generation system with biological realism
+- `enhanced_sequence_generator.py` - Main sequence generator with ORFs
 - `viral_genetic_engineering.py` - Core engineering methods with partial gene deletion
 - `virus_sequences_all_orfs.py` - NCBI sequence loader with ORF annotations
 - `all_virus_annotations.json` - Parsed GenBank ORF annotations for all viruses
@@ -21,7 +21,7 @@ A more realistic virus engineering pipeline using 25 NCBI whole genome sequences
 - `engineered_sequences/` - Generated engineered sequences (25,000 total)
 - `.gitignore` - Excludes large generated datasets
 
-## 🚀 Usage
+## Usage
 
 ### Basic Usage
 ```bash
@@ -40,7 +40,7 @@ python enhanced_sequence_generator.py
 - **FASTA files**: Full engineered genome sequences ready for analysis
 - **Summary**: Complete generation statistics and method distribution
 
-## 🦠 Available Viruses (25 total - complete genomes only)
+## Available Viruses (25 total - complete genomes only)
 
 ### Coronavirus Family (5 viruses)
 - SARS-CoV-2 (NC_045512.2) - 29,903 bp, 12 ORFs
@@ -66,7 +66,7 @@ python enhanced_sequence_generator.py
 - Astrovirus MLB1 (NC_011400) - 6,171 bp, 3 ORFs
 - And 10 more complete viral genomes...
 
-## 🔬 Engineering Methods (13 total)
+## Engineering Methods (13 total)
 
 ### 1. Region Inversion
 - Inverts DNA regions at restriction sites avoiding ORFs
@@ -136,9 +136,9 @@ python enhanced_sequence_generator.py
 - Includes promoter, RBS, coding region, terminator
 - Synthetic biology standard
 
-## 🧪 Restriction Enzymes (29 total)
+##  Restriction Enzymes (29 total)
 
-### 6-Cutters (Common)
+### 6-Cutters 
 - **BamHI**: GGATCC
 - **EcoRI**: GAATTC
 - **HindIII**: AAGCTT
@@ -160,7 +160,7 @@ python enhanced_sequence_generator.py
 - **EcoRV**: GATATC
 - **ScaI**: AGTACT
 
-### 4-Cutters (Frequent)
+### 4-Cutters 
 - **AluI**: AGCT
 - **DdeI**: CTNAG
 - **HaeIII**: GGCC
@@ -171,7 +171,7 @@ python enhanced_sequence_generator.py
 - **HpaII**: CCGG
 - **MspI**: CCGG
 
-## 📊 Output
+## Output
 
 ### JSON Files (Detailed Metadata)
 Each virus has a detailed JSON file with:
@@ -213,7 +213,7 @@ engineered_sequences/
 - **After**: Partial deletion (154-766 bp, avg 30.6%) - creates attenuated virus
 - **Result**: More realistic for classifier training with natural-like modifications
 
-## 📈 Dataset Generation
+## Dataset Generation
 
 ### Current Configuration
 - **25 viruses** × **1000 examples** = **25,000 engineered genomes**
@@ -227,15 +227,8 @@ engineered_sequences/
 - Frameshift Mutations: ~8.0% (1,990 sequences)
 - And 10 more methods with balanced distribution
 
-## 🚫 Excluded Files
 
-The following files are excluded from the repository (via `.gitignore`):
-- `engineered_sequences/` - Directory with 25,000+ engineered sequences
-- Large JSON metadata files (generated locally)
-
-These files are generated locally when running the pipeline and should not be committed to version control due to their size.
-
-## 🔧 Requirements
+## Requirements
 
 - Python 3.6+
 - Standard library only (no external dependencies)
@@ -270,11 +263,7 @@ These files are generated locally when running the pipeline and should not be co
 }
 ```
 
-## 🎯 Use Cases
 
-- **Machine Learning**: Training classifiers for engineered vs. natural sequences
-- **Bioinformatics Research**: Studying genetic engineering signatures
-- **Synthetic Biology**: Benchmarking engineering methods
 - **Biosecurity**: Developing detection algorithms for engineered sequences
 - **Education**: Teaching genetic engineering concepts
 
