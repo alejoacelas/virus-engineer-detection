@@ -74,15 +74,15 @@ def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
     # Train and evaluate models
     models_results = {}
 
-    # print("\nTraining K-mer Logistic Regression...")
-    # kmer_results = train_kmer_baseline(X_train, X_test, y_train, y_test, k=6, max_features=1000)
-    # kmer_eval = evaluate_model_performance(
-    #     y_test.values, kmer_results['y_test_pred'], test_data, kmer_results['y_test_proba']
-    # )
-    # models_results['kmer'] = {'results': kmer_results, 'evaluation': kmer_eval}
+    print("\nTraining K-mer Logistic Regression...")
+    kmer_results = train_kmer_baseline(X_train, X_test, y_train, y_test, k=6, max_features=1000)
+    kmer_eval = evaluate_model_performance(
+        y_test.values, kmer_results['y_test_pred'], test_data, kmer_results['y_test_proba']
+    )
+    models_results['kmer'] = {'results': kmer_results, 'evaluation': kmer_eval}
 
-    # print("K-mer Results:")
-    # print_metrics_comparison(kmer_eval['overall'])
+    print("K-mer Results:")
+    print_metrics_comparison(kmer_eval['overall'])
 
     print("\nRunning BLAST-based Baseline...")
     blast_results = run_blast_baseline(X_train, X_test, y_train, y_test)
@@ -108,15 +108,15 @@ def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
     print_metrics_comparison(multi_kmer_eval['overall'])
 
     # CNN baseline
-    # print("\nTraining CNN Baseline...")
-    # cnn_results = train_cnn_baseline(X_train, X_test, y_train, y_test, epochs=10, use_improved=False)
-    # cnn_eval = evaluate_model_performance(
-    #     y_test.values, cnn_results['y_test_pred'], test_data, cnn_results['y_test_proba']
-    # )
-    # models_results['cnn'] = {'results': cnn_results, 'evaluation': cnn_eval}
+    print("\nTraining CNN Baseline...")
+    cnn_results = train_cnn_baseline(X_train, X_test, y_train, y_test, epochs=10, use_improved=False)
+    cnn_eval = evaluate_model_performance(
+        y_test.values, cnn_results['y_test_pred'], test_data, cnn_results['y_test_proba']
+    )
+    models_results['cnn'] = {'results': cnn_results, 'evaluation': cnn_eval}
 
-    # print("CNN Results:")
-    # print_metrics_comparison(cnn_eval['overall'])
+    print("CNN Results:")
+    print_metrics_comparison(cnn_eval['overall'])
 
     # Improved CNN baseline
     print("\n5. Training Improved CNN Baseline...")
@@ -164,6 +164,27 @@ def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
     return experiment_id, models_results
 
 if __name__ == "__main__":
+    # Set random seeds for reproducibility
+    import torch
+    import numpy as np
+    import random
+    import os
+
+    # Set seeds
+    SEED = 42
+    torch.manual_seed(SEED)
+    torch.cuda.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)  # For multi-GPU
+    np.random.seed(SEED)
+    random.seed(SEED)
+
+    # Make CUDA operations deterministic
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+    # Set Python hash seed
+    os.environ['PYTHONHASHSEED'] = str(SEED)
+    
     experiment_id, results = run_experiment(
         engineered_data_path="data/processed_engineered_virus.csv",
         original_data_path="data/processed_original_virus.csv",
