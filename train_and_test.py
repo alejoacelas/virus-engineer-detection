@@ -5,15 +5,20 @@ Trains all baselines with consistent data splits and comprehensive evaluation
 """
 
 import pandas as pd
-from utils.data_generator import create_engineering_dataset, split_dataset
+# from utils.data_generator import create_engineering_dataset
+from utils.virus_data_processor import create_virus_dataset
 from utils.metrics import evaluate_model_performance, print_metrics_comparison
 from utils.experiment_logging import log_experiment, save_predictions, prompt_user_notes, generate_experiment_id
 from baselines.kmer_baseline import train_kmer_baseline, train_multi_kmer_baseline
 from baselines.cnn_baseline import train_cnn_baseline
 from baselines.blast_baseline import run_blast_baseline
 
-def run_experiment(csv_path="data/viral_genome_df_prelim.csv", n_samples=5000,
-                  engineering_fraction=0.02, methods=['random_replacement']):
+def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
+                  original_data_path="data/processed_original_virus.csv",
+                  n_samples=5000,
+                  engineering_fraction=0.02,
+                  split_type='family'
+                  ):
     """Run complete training and testing experiment"""
 
     print("=" * 60)
@@ -24,29 +29,30 @@ def run_experiment(csv_path="data/viral_genome_df_prelim.csv", n_samples=5000,
     experiment_id = generate_experiment_id()
     print(f"Experiment ID: {experiment_id}")
 
-    # Create training dataset with 0.5 engineering fraction
-    print("\n1. Creating training dataset...")
-    train_data = create_engineering_dataset(
-        csv_path=csv_path,
+    print("\n1. Creating training dataset")
+    train_data = create_virus_dataset(
         n_samples=int(n_samples * 0.8),  # 80% for training
         engineering_fraction=0.5,
-        methods=methods
+        engineered_data_path=engineered_data_path,
+        original_data_path=original_data_path,
+        split_filter='train',
+        split_type=split_type
     )
 
-    # Create test dataset with 0.02 engineering fraction
-    print("\n2. Creating test dataset...")
-    test_data = create_engineering_dataset(
-        csv_path=csv_path,
+    print("\n2. Creating test dataset")
+    test_data = create_virus_dataset(
         n_samples=int(n_samples * 0.2),  # 20% for testing
-        engineering_fraction=0.02,
-        methods=methods
+        engineering_fraction=engineering_fraction,
+        engineered_data_path=engineered_data_path,
+        original_data_path=original_data_path,
+        split_filter='test',
+        split_type=split_type
     )
+    # test_data = train_data.sample(frac=0.25)
 
-    print(f"Created {len(train_data)} training samples")
+    print("\n")
     print(f"Training engineering fraction: {train_data['label'].mean():.3f}")
-    print(f"Created {len(test_data)} test samples")
     print(f"Test engineering fraction: {test_data['label'].mean():.3f}")
-    print(f"Methods: {train_data['engineering_method'].value_counts().to_dict()}")
 
     X_train, y_train = train_data.drop('label', axis=1), train_data['label']
     X_test, y_test = test_data.drop('label', axis=1), test_data['label']
@@ -57,69 +63,71 @@ def run_experiment(csv_path="data/viral_genome_df_prelim.csv", n_samples=5000,
     data_params = {
         'n_samples': n_samples,
         'engineering_fraction_train': 0.5,
-        'engineering_fraction_test': 0.02,
-        'methods': methods,
+        'engineering_fraction_test': engineering_fraction,
+        'split_type': split_type,
         'train_size': len(train_data),
-        'test_size': len(test_data)
+        'test_size': len(test_data),
+        'train_methods': train_data['engineering_method'].value_counts().to_dict(),
+        'test_methods': test_data['engineering_method'].value_counts().to_dict()
     }
 
     # Train and evaluate models
     models_results = {}
 
-    print("\nTraining K-mer Logistic Regression...")
-    kmer_results = train_kmer_baseline(X_train, X_test, y_train, y_test, k=6, max_features=1000)
-    kmer_eval = evaluate_model_performance(
-        y_test.values, kmer_results['y_test_pred'], test_data, kmer_results['y_test_proba']
+    # print("\nTraining K-mer Logistic Regression...")
+    # kmer_results = train_kmer_baseline(X_train, X_test, y_train, y_test, k=6, max_features=1000)
+    # kmer_eval = evaluate_model_performance(
+    #     y_test.values, kmer_results['y_test_pred'], test_data, kmer_results['y_test_proba']
+    # )
+    # models_results['kmer'] = {'results': kmer_results, 'evaluation': kmer_eval}
+
+    # print("K-mer Results:")
+    # print_metrics_comparison(kmer_eval['overall'])
+
+    print("\nRunning BLAST-based Baseline...")
+    blast_results = run_blast_baseline(X_train, X_test, y_train, y_test)
+    blast_eval = evaluate_model_performance(
+        y_test.values, blast_results['y_test_pred'], test_data, blast_results['y_test_proba']
     )
-    models_results['kmer'] = {'results': kmer_results, 'evaluation': kmer_eval}
+    models_results['blast'] = {'results': blast_results, 'evaluation': blast_eval}
 
-    print("K-mer Results:")
-    print_metrics_comparison(kmer_eval['overall'])
+    print("BLAST Results:")
+    print_metrics_comparison(blast_eval['overall'])
 
-    # print("\nRunning BLAST-based Baseline...")
-    # blast_results = run_blast_baseline(X_train, X_test, y_train, y_test)
-    # blast_eval = evaluate_model_performance(
-    #     y_test.values, blast_results['y_test_pred'], test_data, blast_results['y_test_proba']
-    # )
-    # models_results['blast'] = {'results': blast_results, 'evaluation': blast_eval}
+    # Multi K-mer baseline
+    print("\nTraining Multi-K-mer Baseline...")
+    multi_kmer_results = train_multi_kmer_baseline(
+        X_train, X_test, y_train, y_test, k_values=[4, 6, 8], max_features=500
+    )
+    multi_kmer_eval = evaluate_model_performance(
+        y_test.values, multi_kmer_results['y_test_pred'], test_data, multi_kmer_results['y_test_proba']
+    )
+    models_results['multi_kmer'] = {'results': multi_kmer_results, 'evaluation': multi_kmer_eval}
 
-    # print("BLAST Results:")
-    # print_metrics_comparison(blast_eval['overall'])
-
-    # # Multi K-mer baseline
-    # print("\nTraining Multi-K-mer Baseline...")
-    # multi_kmer_results = train_multi_kmer_baseline(
-    #     X_train, X_test, y_train, y_test, k_values=[4, 6, 8], max_features=500
-    # )
-    # multi_kmer_eval = evaluate_model_performance(
-    #     y_test.values, multi_kmer_results['y_test_pred'], test_data, multi_kmer_results['y_test_proba']
-    # )
-    # models_results['multi_kmer'] = {'results': multi_kmer_results, 'evaluation': multi_kmer_eval}
-
-    # print("Multi-K-mer Results:")
-    # print_metrics_comparison(multi_kmer_eval['overall'])
+    print("Multi-K-mer Results:")
+    print_metrics_comparison(multi_kmer_eval['overall'])
 
     # CNN baseline
-    print("\nTraining CNN Baseline...")
-    cnn_results = train_cnn_baseline(X_train, X_test, y_train, y_test, epochs=10, use_improved=False)
-    cnn_eval = evaluate_model_performance(
-        y_test.values, cnn_results['y_test_pred'], test_data, cnn_results['y_test_proba']
-    )
-    models_results['cnn'] = {'results': cnn_results, 'evaluation': cnn_eval}
-
-    print("CNN Results:")
-    print_metrics_comparison(cnn_eval['overall'])
-
-    # # Improved CNN baseline
-    # print("\n5. Training Improved CNN Baseline...")
-    # improved_cnn_results = train_cnn_baseline(X_train, X_test, y_train, y_test, epochs=10, use_improved=True)
-    # improved_cnn_eval = evaluate_model_performance(
-    #     y_test.values, improved_cnn_results['y_test_pred'], test_data, improved_cnn_results['y_test_proba']
+    # print("\nTraining CNN Baseline...")
+    # cnn_results = train_cnn_baseline(X_train, X_test, y_train, y_test, epochs=10, use_improved=False)
+    # cnn_eval = evaluate_model_performance(
+    #     y_test.values, cnn_results['y_test_pred'], test_data, cnn_results['y_test_proba']
     # )
-    # models_results['improved_cnn'] = {'results': improved_cnn_results, 'evaluation': improved_cnn_eval}
+    # models_results['cnn'] = {'results': cnn_results, 'evaluation': cnn_eval}
 
-    # print("Improved CNN Results:")
-    # print_metrics_comparison(improved_cnn_eval['overall'])
+    # print("CNN Results:")
+    # print_metrics_comparison(cnn_eval['overall'])
+
+    # Improved CNN baseline
+    print("\n5. Training Improved CNN Baseline...")
+    improved_cnn_results = train_cnn_baseline(X_train, X_test, y_train, y_test, epochs=10, use_improved=True)
+    improved_cnn_eval = evaluate_model_performance(
+        y_test.values, improved_cnn_results['y_test_pred'], test_data, improved_cnn_results['y_test_proba']
+    )
+    models_results['improved_cnn'] = {'results': improved_cnn_results, 'evaluation': improved_cnn_eval}
+
+    print("Improved CNN Results:")
+    print_metrics_comparison(improved_cnn_eval['overall'])
 
     # Summary comparison
     print("\n" + "=" * 60)
@@ -157,7 +165,9 @@ def run_experiment(csv_path="data/viral_genome_df_prelim.csv", n_samples=5000,
 
 if __name__ == "__main__":
     experiment_id, results = run_experiment(
-        n_samples=20_000,
+        engineered_data_path="data/processed_engineered_virus.csv",
+        original_data_path="data/processed_original_virus.csv",
+        n_samples=200_000,
         engineering_fraction=0.02,
-        methods=['random_replacement', 'codon_optimization', 'motif_insertion']
+        split_type='random'
     )

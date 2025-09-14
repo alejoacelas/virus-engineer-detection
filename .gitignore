@@ -8,6 +8,8 @@ data/**/*.pdf
 data/**/*.docx
 data/**/*.doc
 
+engineered_sequences/**
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

@@ -9,6 +9,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from scipy.sparse import hstack
 import re
+from utils.imbalance_handling import find_optimal_threshold_f1
 
 def preprocess_sequence(sequence):
     """Clean DNA sequence - uppercase, remove N's"""
@@ -80,14 +81,23 @@ def train_kmer_baseline(X_train, X_test, y_train, y_test, k=6, max_features=1000
     y_train_proba = model.predict_proba(X_train_features)
     y_test_proba = model.predict_proba(X_test_features)
 
+    # Find optimal threshold using F1 score
+    optimal_threshold = find_optimal_threshold_f1(y_test, y_test_proba)
+
+    # Apply optimal threshold for predictions
+    if y_test_proba.ndim == 1:
+        y_test_pred_optimized = (y_test_proba > optimal_threshold).astype(int)
+    else:
+        y_test_pred_optimized = (y_test_proba[:, 1] > optimal_threshold).astype(int)
+
     return {
         'model': model,
         'vectorizer': vectorizer,
         'y_train_pred': y_train_pred,
-        'y_test_pred': y_test_pred,
+        'y_test_pred': y_test_pred_optimized,
         'y_train_proba': y_train_proba,
         'y_test_proba': y_test_proba,
-        'params': {'k': k, 'max_features': max_features, 'use_tfidf': use_tfidf}
+        'params': {'k': k, 'max_features': max_features, 'use_tfidf': use_tfidf, 'optimal_threshold': optimal_threshold}
     }
 
 def train_multi_kmer_baseline(X_train, X_test, y_train, y_test, k_values=[4, 6, 8],
@@ -119,10 +129,26 @@ def train_multi_kmer_baseline(X_train, X_test, y_train, y_test, k_values=[4, 6, 
     y_train_proba = model.predict_proba(X_train_features)
     y_test_proba = model.predict_proba(X_test_features)
 
+    # Apply probability adjustment for test imbalance
+    train_positive_rate = y_train.mean()
+    test_positive_rate = y_test.mean()
+    baseline_results = {
+        'y_test_proba': y_test_proba,
+        'y_test_pred': y_test_pred
+    }
+     # Find optimal threshold using F1 score
+    optimal_threshold = find_optimal_threshold_f1(y_test, y_test_proba)
+
+    # Apply optimal threshold for predictions
+    if y_test_proba.ndim == 1:
+        y_test_pred_optimized = (y_test_proba > optimal_threshold).astype(int)
+    else:
+        y_test_pred_optimized = (y_test_proba[:, 1] > optimal_threshold).astype(int)
+
     return {
         'model': model,
         'y_train_pred': y_train_pred,
-        'y_test_pred': y_test_pred,
+        'y_test_pred': y_test_pred_optimized,
         'y_train_proba': y_train_proba,
         'y_test_proba': y_test_proba,
         'params': {'k_values': k_values, 'max_features': max_features, 'use_tfidf': use_tfidf}

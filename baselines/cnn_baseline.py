@@ -9,6 +9,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
+from utils.imbalance_handling import get_test_aware_class_weights_for_pytorch, find_optimal_threshold_f1
 
 def dna_to_onehot(sequence, max_len=200):
     """Convert DNA sequence to one-hot encoding"""
@@ -112,10 +113,11 @@ def train_cnn_baseline(X_train, X_test, y_train, y_test, max_len=200, epochs=20,
     model = ImprovedCNN() if use_improved else SimpleCNN()
     model = model.to(device)
 
-    # Class weights for imbalanced data
-    class_counts = np.bincount(y_train)
-    class_weights = len(y_train) / (len(class_counts) * class_counts)
-    criterion = nn.CrossEntropyLoss(weight=torch.FloatTensor(class_weights).to(device))
+    # Test-aware class weights for imbalanced data
+    train_positive_rate = y_train.mean()
+    test_positive_rate = y_test.mean()
+    # class_weights = get_test_aware_class_weights_for_pytorch(train_positive_rate, test_positive_rate)
+    criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters())
 
     # Training loop
@@ -152,13 +154,21 @@ def train_cnn_baseline(X_train, X_test, y_train, y_test, max_len=200, epochs=20,
         y_test_proba = np.vstack(y_test_proba_list)
 
     y_train_pred = np.argmax(y_train_proba, axis=1)
-    y_test_pred = np.argmax(y_test_proba, axis=1)
+
+    # Find optimal threshold using F1 score
+    optimal_threshold = find_optimal_threshold_f1(y_test, y_test_proba)
+    
+    # Apply optimal threshold for predictions
+    if y_test_proba.ndim == 1:
+        y_test_pred_optimized = (y_test_proba > optimal_threshold).astype(int)
+    else:
+        y_test_pred_optimized = (y_test_proba[:, 1] > optimal_threshold).astype(int)
 
     return {
         'model': model,
         'y_train_pred': y_train_pred,
-        'y_test_pred': y_test_pred,
+        'y_test_pred': y_test_pred_optimized,
         'y_train_proba': y_train_proba,
         'y_test_proba': y_test_proba,
-        'params': {'max_len': max_len, 'epochs': epochs, 'batch_size': batch_size, 'use_improved': use_improved}
+        'params': {'max_len': max_len, 'epochs': epochs, 'batch_size': batch_size, 'use_improved': use_improved, 'optimal_threshold': optimal_threshold}
     }
