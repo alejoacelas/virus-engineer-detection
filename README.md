@@ -1,11 +1,11 @@
-# Comprehensive Virus Engineering System
+# Virus engineering simulation pipeline
 
-A more realistic virus engineering pipeline using 25 NCBI whole genome sequences that generates reproducible datasets with 13 different genetic engineering methods.
+A more realistic virus engineering pipeline using 25 NCBI whole genome sequences that generates reproducible datasets with 4 different genetic engineering methods.
 
 ##  Features
 
 - **25 NCBI Viruses**: Coronavirus, Adenovirus, Herpesvirus, and more (complete genomes only)
-- **13 Engineering Methods**: Region inversion, duplication, deletion, partial gene deletion, GFP insertion, frameshift mutations, CRISPR simulation
+- **4 Engineering Methods**: Region inversion, deletion, gene deletion, frameshift mutations
 - **ORF-Aware Engineering**: Uses GenBank annotations to target specific genes and regions
 - **Full Genomes**: Complete viral sequences (6K-200K bp) with modification coordinates
 - **Balanced Datasets**: 1000 examples per virus with balanced method distribution
@@ -66,7 +66,7 @@ python enhanced_sequence_generator.py
 - Astrovirus MLB1 (NC_011400) - 6,171 bp, 3 ORFs
 - And 10 more complete viral genomes...
 
-## Engineering Methods (13 total)
+## Engineering Methods (4 total)
 
 ### 1. Region Inversion
 - Inverts DNA regions at restriction sites avoiding ORFs
@@ -74,67 +74,21 @@ python enhanced_sequence_generator.py
 - Variable size variations (50-500 bp) with biological randomness
 - Falls back to random positioning if no safe restriction sites available
 
-### 2. Region Duplication
-- Duplicates genomic regions at restriction sites
-- Uses restriction sites for both source and insertion positions
-- Variable duplication sizes with biological feasibility
-- Maintains genome structure integrity
-
-### 3. Region Deletion
+### 2. Region Deletion
 - Deletes regions at restriction sites between ORFs
 - Uses restriction enzyme cutting sites for precise targeting
 - Safe deletion sizes (50-500 bp) with position tolerance
 - Preserves genome integrity and gene function
 
-### 4. Partial Gene Deletion
+### 3. Gene Deletion
 - Deletes 10-50% of genes (biologically realistic)
 - Random deletion positions (start, middle, end)
 
-
-### 5. Homing Endonuclease Cutting
-- Simulates I-SceI endonuclease cutting
-- Inserts recognition sequences
-- Realistic integration patterns
-
-### 6. GFP Insertion
-- Inserts Green Fluorescent Protein reporter (720 bp) at restriction sites
-- Targets safe regions between ORFs using restriction enzyme sites
-- Includes proper flanking sequences
-
-### 7. CRISPR-Cas9 GFP Insertion
-- Inserts GFP with CRISPR-Cas9 targeting at restriction sites
-- Includes PAM sequences (NGG) for realistic targeting
-- Uses restriction sites for precise integration
-
-### 8. Gene Start Deletion
-- Deletes 10-50% from start of genes
-- Maintains gene structure
-- Biological feasibility
-
-### 9. Gene End Deletion
-- Deletes 10-50% from end of genes
-- Preserves start codons
-- Realistic truncation patterns
-
-### 10. Frameshift Mutations
+### 4. Frameshift Mutations
 - Creates 1bp insertion/deletion mutations
 - Causes reading frame shifts
 - Targets ORF regions
 
-### 11. Phosphorylation Inhibition SNPs
-- Point mutations to inhibit phosphorylation
-- Converts serine/threonine codons to alanine
-- Biologically relevant changes
-
-### 12. iGEM GFP Insertion
-- Inserts iGEM-specific GFP variant (750 bp)
-- Popular in synthetic biology competitions
-- Optimized expression
-
-### 13. MoClo Construct Insertion
-- Inserts modular cloning constructs
-- Includes promoter, RBS, coding region, terminator
-- Synthetic biology standard
 
 ##  Restriction Enzymes (29 total)
 
@@ -198,15 +152,7 @@ engineered_sequences/
 └── generation_summary.json
 ```
 
-## 🔬 Biological Realism
 
-### Key Improvements
-- **Partial Gene Deletions**: 10-50% of genes instead of full deletions
-- **ORF-Aware Engineering**: Uses GenBank annotations to target specific genes
-- **Restriction Site Targeting**: Uses 29 restriction enzymes for realistic genetic engineering
-- **Realistic Modifications**: Creates attenuated viruses rather than lethal mutations
-- **Biological Randomness**: Variable region sizes, position tolerance, method specificity
-- **Complete Genomes**: Full-length sequences (6K-200K bp) with proper annotations
 
 ### Example: Astrovirus Gene Deletion
 - **Before**: Full ORF1b deletion (1537 bp) - would make virus non-viable
@@ -217,15 +163,10 @@ engineered_sequences/
 
 ### Current Configuration
 - **25 viruses** × **1000 examples** = **25,000 engineered genomes**
-- **13 methods** with balanced distribution
+- **4 methods** with balanced distribution
 - **Randomness** ensures 1000 sequences per virus
 - **Complete metadata** with modification coordinates
 
-### Method Distribution (Example)
-- Region Inversion: ~8.0% (1,990 sequences)
-- Gene Deletion: ~7.9% (1,968 sequences) - **all partial deletions**
-- Frameshift Mutations: ~8.0% (1,990 sequences)
-- And 10 more methods with balanced distribution
 
 
 ## Requirements
@@ -234,7 +175,7 @@ engineered_sequences/
 - Standard library only (no external dependencies)
 - ~2GB free disk space for full dataset generation
 
-## 📝 Example Output
+## Example Output
 
 ### FASTA Header Format
 ```
@@ -264,8 +205,6 @@ engineered_sequences/
 ```
 
 
-- **Biosecurity**: Developing detection algorithms for engineered sequences
-- **Education**: Teaching genetic engineering concepts
 
 ---
 
