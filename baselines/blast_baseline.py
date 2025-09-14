@@ -28,7 +28,7 @@ def create_blast_db(fasta_file, db_name):
     ]
     subprocess.run(command, check=True, capture_output=True)
 
-def run_blast(query_file, db_name, output_file, evalue=100.0, word_size=7, max_target_seqs=9, max_hsps=5):
+def run_blast(query_file, db_name, output_file, num_threads=1, evalue=100.0, word_size=7, max_target_seqs=9, max_hsps=5):
     """Run blastn and save results to a file."""
     command = [
         'blastn',
@@ -39,7 +39,8 @@ def run_blast(query_file, db_name, output_file, evalue=100.0, word_size=7, max_t
         '-max_hsps', str(max_hsps),
         '-evalue', str(evalue),
         '-max_target_seqs', str(max_target_seqs),
-        '-word_size', str(word_size)
+        '-word_size', str(word_size),
+        '-num_threads', str(num_threads)
     ]
     subprocess.run(command, check=True, capture_output=True)
 
@@ -94,9 +95,9 @@ def sigmoid(x):
     """Sigmoid function to convert scores to probabilities"""
     return 1.0 / (1.0 + math.exp(-x))
 
-def run_blast_baseline(X_train, X_test, y_train, y_test, min_non_matching_bases=39,
+def run_blast_baseline(X_train, X_test, y_train, y_test, min_non_matching_bases=30,
                       identity_threshold=96.66126976030961, evalue=100.0, word_size=7, max_target_seqs=9, max_hsps=5,
-                      use_soft_scoring=True, apply_probability_adjustment=True):
+                      use_soft_scoring=True, apply_probability_adjustment=True, num_threads=1):
     """Run BLAST-based chimera detection baseline."""
     with tempfile.TemporaryDirectory() as temp_dir:
         db_name = os.path.join(temp_dir, 'viral_db')
@@ -112,7 +113,7 @@ def run_blast_baseline(X_train, X_test, y_train, y_test, min_non_matching_bases=
         # Run BLAST on test sequences
         test_sequences = X_test['sequence']
         write_fasta_file(test_sequences, query_file)
-        run_blast(query_file, db_name, output_file, evalue, word_size, max_target_seqs, max_hsps)
+        run_blast(query_file, db_name, output_file, num_threads=num_threads, evalue=evalue, word_size=word_size, max_target_seqs=max_target_seqs, max_hsps=max_hsps)
 
         # Parse results and predict
         blast_df = parse_blast_results(output_file)
@@ -202,6 +203,7 @@ def run_blast_baseline(X_train, X_test, y_train, y_test, min_non_matching_bases=
             'max_hsps': max_hsps,
             'use_soft_scoring': use_soft_scoring,
             'apply_probability_adjustment': apply_probability_adjustment,
-            'optimal_threshold': optimal_threshold
+            'optimal_threshold': optimal_threshold,
+            'num_threads': num_threads
         }
     }
