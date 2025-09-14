@@ -1,0 +1,18 @@
+{
+  "best_f1_score": 0.03970223325062035,
+  "best_precision": 0.020253164556962026,
+  "best_recall": 1.0,
+  "best_accuracy": 0.0325,
+  "best_hyperparameters": {
+    "min_non_matching_bases": 39,
+    "identity_threshold": 96.66126976030961,
+    "evalue": 100.0,
+    "word_size": 7,
+    "max_target_seqs": 9,
+    "max_hsps": 5,
+    "use_soft_scoring": "True",
+    "apply_probability_adjustment": "True"
+  },
+  "total_trials": 50,
+  "successful_trials": 50
+}

@@ -1,0 +1,10 @@
+{
+  "min_non_matching_bases": 39,
+  "identity_threshold": 96.66126976030961,
+  "evalue": 100.0,
+  "word_size": 7,
+  "max_target_seqs": 9,
+  "max_hsps": 5,
+  "use_soft_scoring": "True",
+  "apply_probability_adjustment": "True"
+}

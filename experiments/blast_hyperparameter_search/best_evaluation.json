@@ -1,0 +1,17 @@
+{
+  "overall": {
+    "model": {
+      "accuracy": 0.0325,
+      "precision": 0.020253164556962026,
+      "recall": 1.0,
+      "f1": 0.03970223325062035
+    },
+    "naive": {
+      "accuracy": 0.97,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "positive_fraction": 0.02
+  }
+}
