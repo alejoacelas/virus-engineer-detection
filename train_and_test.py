@@ -13,7 +13,6 @@ from baselines.kmer_baseline import train_kmer_baseline
 from baselines.cnn_baseline import train_cnn_baseline
 from baselines.blast_baseline import run_blast_baseline
 from baselines.ensemble_baseline import train_ensemble_baseline_from_results
-from utils.virus_data_processor import load_ged_test_dataset, load_viral_vectors_dataset
 
 def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
                   original_data_path="data/processed_original_virus.csv",

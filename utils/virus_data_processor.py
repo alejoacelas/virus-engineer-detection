@@ -534,7 +534,7 @@ def create_virus_dataset(n_samples: int = 1000,
                         original_data_path: str = None,
                         split_filter: str = None,
                         split_type: str = 'family',
-                        random_substitution_only: bool = False) -> pd.DataFrame:
+                        engineering_method_filter: str = None) -> pd.DataFrame:
     """
     Create dataset with engineered and original virus sequences
     Similar interface to create_engineering_dataset from data_generator.py
@@ -548,7 +548,7 @@ def create_virus_dataset(n_samples: int = 1000,
         original_data_path: Path to preprocessed original data CSV
         split_filter: Filter by split ('train' or 'test'), None for no filtering
         split_type: Type of split to filter by ('family' or 'random')
-        random_substitution_only: If True, only use engineered sequences with 'random_substitution' method
+        engineering_method_filter: If provided, only use engineered sequences with this engineering method
 
     Returns:
         DataFrame with virus dataset
@@ -576,11 +576,11 @@ def create_virus_dataset(n_samples: int = 1000,
 
         print(f"After filtering: {len(engineered_df)} engineered, {len(original_df)} original samples")
 
-    # Filter for random_substitution only if flag is set
-    if random_substitution_only:
-        print("Filtering engineered data for random_substitution method only...")
-        engineered_df = engineered_df[engineered_df['engineering_method'] == 'random_substitution'].copy()
-        print(f"After random_substitution filter: {len(engineered_df)} engineered samples")
+    # Filter for specific engineering method if provided
+    if engineering_method_filter:
+        print(f"Filtering engineered data for {engineering_method_filter} method only...")
+        engineered_df = engineered_df[engineered_df['engineering_method'] == engineering_method_filter].copy()
+        print(f"After engineering method filter: {len(engineered_df)} engineered samples")
 
     target_positive_samples = int(n_samples * engineering_fraction)
     n_original = n_samples - target_positive_samples
