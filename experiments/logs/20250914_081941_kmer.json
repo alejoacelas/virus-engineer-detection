@@ -1,0 +1,311 @@
+{
+  "experiment_id": "20250914_081941",
+  "timestamp": "2025-09-14T08:21:22.742649",
+  "model_name": "kmer",
+  "data_params": {
+    "n_samples": 20000,
+    "engineering_fraction_train": 0.5,
+    "engineering_fraction_test": 0.02,
+    "split_type": "random",
+    "train_size": 16000,
+    "test_size": 4000,
+    "train_methods": {
+      "natural": 8000,
+      "random_substitution": 8000
+    },
+    "test_methods": {
+      "natural": 3920,
+      "random_substitution": 80
+    }
+  },
+  "model_params": {
+    "k": 6,
+    "max_features": 1000,
+    "use_tfidf": false,
+    "optimal_threshold": 0.59
+  },
+  "results": {
+    "overall": {
+      "model": {
+        "accuracy": 0.72575,
+        "precision": 0.03305785123966942,
+        "recall": 0.45,
+        "f1": 0.06159110350727117
+      },
+      "naive": {
+        "accuracy": 0.9615,
+        "precision": 0.02564102564102564,
+        "recall": 0.025,
+        "f1": 0.02531645569620253
+      },
+      "positive_fraction": 0.02
+    },
+    "by_engineering_method": {
+      "model": {
+        "accuracy": 0.72575,
+        "precision": 0.03305785123966942,
+        "recall": 0.45,
+        "f1": 0.06159110350727117
+      },
+      "naive": {
+        "accuracy": 0.9615,
+        "precision": 0.02564102564102564,
+        "recall": 0.025,
+        "f1": 0.02531645569620253
+      },
+      "positive_fraction": 0.02,
+      "subgroups": {
+        "model": {
+          "natural": {
+            "accuracy": 0.7313775510204081,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "n_samples": "3920"
+          },
+          "random_substitution": {
+            "accuracy": 0.45,
+            "precision": 1.0,
+            "recall": 0.45,
+            "f1": 0.6206896551724138,
+            "n_samples": "80"
+          }
+        },
+        "naive": {
+          "natural": {
+            "accuracy": 0.9806122448979592,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "n_samples": "3920"
+          },
+          "random_substitution": {
+            "accuracy": 0.025,
+            "precision": 1.0,
+            "recall": 0.025,
+            "f1": 0.04878048780487805,
+            "n_samples": "80"
+          }
+        }
+      }
+    },
+    "by_length_bin": {
+      "model": {
+        "accuracy": 0.72575,
+        "precision": 0.03305785123966942,
+        "recall": 0.45,
+        "f1": 0.06159110350727117
+      },
+      "naive": {
+        "accuracy": 0.9615,
+        "precision": 0.02564102564102564,
+        "recall": 0.025,
+        "f1": 0.02531645569620253
+      },
+      "positive_fraction": 0.02,
+      "subgroups": {
+        "model": {
+          "short": {
+            "accuracy": 0.8567901234567902,
+            "precision": 0.05357142857142857,
+            "recall": 0.375,
+            "f1": 0.09375,
+            "n_samples": "405"
+          },
+          "medium": {
+            "accuracy": 0.7292971468336813,
+            "precision": 0.02990897269180754,
+            "recall": 0.41818181818181815,
+            "f1": 0.055825242718446605,
+            "n_samples": "2874"
+          },
+          "long": {
+            "accuracy": 0.6380027739251041,
+            "precision": 0.03787878787878788,
+            "recall": 0.5882352941176471,
+            "f1": 0.0711743772241993,
+            "n_samples": "721"
+          }
+        },
+        "naive": {
+          "short": {
+            "accuracy": 0.9654320987654321,
+            "precision": 0.125,
+            "recall": 0.125,
+            "f1": 0.125,
+            "n_samples": "405"
+          },
+          "medium": {
+            "accuracy": 0.9627696590118302,
+            "precision": 0.018518518518518517,
+            "recall": 0.01818181818181818,
+            "f1": 0.01834862385321101,
+            "n_samples": "2874"
+          },
+          "long": {
+            "accuracy": 0.9542302357836339,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "n_samples": "721"
+          }
+        }
+      }
+    },
+    "by_virus_key": {
+      "model": {
+        "accuracy": 0.72575,
+        "precision": 0.03305785123966942,
+        "recall": 0.45,
+        "f1": 0.06159110350727117
+      },
+      "naive": {
+        "accuracy": 0.9615,
+        "precision": 0.02564102564102564,
+        "recall": 0.025,
+        "f1": 0.02531645569620253
+      },
+      "positive_fraction": 0.02,
+      "subgroups": {
+        "model": {
+          "human_coronavirus_oc43_nc_0062131": {
+            "accuracy": 0.7404426559356136,
+            "precision": 0.03435114503816794,
+            "recall": 0.6428571428571429,
+            "f1": 0.06521739130434782,
+            "n_samples": "994"
+          },
+          "human_metapneumovirus_nc_0041482": {
+            "accuracy": 0.7186192468619247,
+            "precision": 0.015267175572519083,
+            "recall": 0.26666666666666666,
+            "f1": 0.02888086642599278,
+            "n_samples": "956"
+          },
+          "human_rhinovirus_b_nc_0014901": {
+            "accuracy": 0.715852442671984,
+            "precision": 0.031578947368421054,
+            "recall": 0.5,
+            "f1": 0.0594059405940594,
+            "n_samples": "1003"
+          },
+          "human_rhinovirus_a_nc_0014901": {
+            "accuracy": 0.7277936962750716,
+            "precision": 0.05,
+            "recall": 0.42424242424242425,
+            "f1": 0.08945686900958466,
+            "n_samples": "1047"
+          }
+        },
+        "naive": {
+          "human_coronavirus_oc43_nc_0062131": {
+            "accuracy": 0.96579476861167,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "n_samples": "994"
+          },
+          "human_metapneumovirus_nc_0041482": {
+            "accuracy": 0.9623430962343096,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "n_samples": "956"
+          },
+          "human_rhinovirus_b_nc_0014901": {
+            "accuracy": 0.9720837487537388,
+            "precision": 0.14285714285714285,
+            "recall": 0.1111111111111111,
+            "f1": 0.125,
+            "n_samples": "1003"
+          },
+          "human_rhinovirus_a_nc_0014901": {
+            "accuracy": 0.9465138490926457,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "n_samples": "1047"
+          }
+        }
+      }
+    },
+    "by_virus_family": {
+      "model": {
+        "accuracy": 0.72575,
+        "precision": 0.03305785123966942,
+        "recall": 0.45,
+        "f1": 0.06159110350727117
+      },
+      "naive": {
+        "accuracy": 0.9615,
+        "precision": 0.02564102564102564,
+        "recall": 0.025,
+        "f1": 0.02531645569620253
+      },
+      "positive_fraction": 0.02,
+      "subgroups": {
+        "model": {
+          "coronavirus": {
+            "accuracy": 0.7404426559356136,
+            "precision": 0.03435114503816794,
+            "recall": 0.6428571428571429,
+            "f1": 0.06521739130434782,
+            "n_samples": "994"
+          },
+          "unknown": {
+            "accuracy": 0.7258235919234857,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "n_samples": "941"
+          },
+          "picornavirus": {
+            "accuracy": 0.7219512195121951,
+            "precision": 0.04070796460176991,
+            "recall": 0.45098039215686275,
+            "f1": 0.07467532467532467,
+            "n_samples": "2050"
+          },
+          "paramyxovirus": {
+            "accuracy": 0.26666666666666666,
+            "precision": 1.0,
+            "recall": 0.26666666666666666,
+            "f1": 0.42105263157894735,
+            "n_samples": "15"
+          }
+        },
+        "naive": {
+          "coronavirus": {
+            "accuracy": 0.96579476861167,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "n_samples": "994"
+          },
+          "unknown": {
+            "accuracy": 0.9776833156216791,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "n_samples": "941"
+          },
+          "picornavirus": {
+            "accuracy": 0.9590243902439024,
+            "precision": 0.05405405405405406,
+            "recall": 0.0392156862745098,
+            "f1": 0.045454545454545456,
+            "n_samples": "2050"
+          },
+          "paramyxovirus": {
+            "accuracy": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "n_samples": "15"
+          }
+        }
+      }
+    }
+  },
+  "user_notes": "Automated test run"
+}

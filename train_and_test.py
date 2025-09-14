@@ -12,6 +12,7 @@ from utils.experiment_logging import log_experiment, save_predictions, prompt_us
 from baselines.kmer_baseline import train_kmer_baseline
 from baselines.cnn_baseline import train_cnn_baseline
 from baselines.blast_baseline import run_blast_baseline
+from baselines.ensemble_baseline import train_ensemble_baseline_from_results
 from utils.virus_data_processor import load_ged_test_dataset, load_viral_vectors_dataset
 
 def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
@@ -52,8 +53,6 @@ def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
         split_type=split_type,
         random_substitution_only=random_substitution_only
     )
-    # test_data = load_ged_test_dataset("data/GED_test.csv", n_samples=int(n_samples * 0.2))
-    # test_data = load_viral_vectors_dataset("data/GED_test.csv", n_samples=int(n_samples * 0.2))
 
     print("\n")
     print(f"Training engineering fraction: {train_data['label'].mean():.3f}")
@@ -101,7 +100,7 @@ def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
 
     # CNN baseline
     print("\nTraining CNN Baseline...")
-    cnn_results = train_cnn_baseline(X_train, X_test, y_train, y_test, epochs=10, use_improved=False)
+    cnn_results = train_cnn_baseline(X_train, X_test, y_train, y_test, epochs=2, use_improved=False)
     cnn_eval = evaluate_model_performance(
         y_test.values, cnn_results['y_test_pred'], test_data, cnn_results['y_test_proba']
     )
@@ -110,11 +109,29 @@ def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
     print("CNN Results:")
     print_metrics_comparison(cnn_eval['overall'])
 
+    # Ensemble baseline - automatically combines all trained models
+    print("\nTraining Ensemble Baseline (Random Forest Meta-Classifier)...")
+    ensemble_results = train_ensemble_baseline_from_results(models_results, test_data, test_split_ratio=0.8)
+
+    # Get the test data that ensemble actually used for evaluation
+    ensemble_test_data = ensemble_results['ensemble_test_data']
+    ensemble_eval = evaluate_model_performance(
+        ensemble_test_data['label'].values, ensemble_results['y_test_pred'],
+        ensemble_test_data, ensemble_results['y_test_proba']
+    )
+    models_results['ensemble'] = {'results': ensemble_results, 'evaluation': ensemble_eval}
+
+    print("Ensemble Results:")
+    print_metrics_comparison(ensemble_eval['overall'])
+    print("\nFeature Importance:")
+    for feature, importance in ensemble_results['feature_importance'].items():
+        print(f"  {feature}: {importance:.3f}")
+
     # Improved CNN baseline
     # print("\n5. Training Improved CNN Baseline...")
-    # improved_cnn_results = train_cnn_baseline(X_train, X_test, y_train, y_test, epochs=10, use_improved=True)
+    # improved_cnn_results = train_cnn_baseline(X_train, X_test_1, y_train, y_test_1, epochs=10, use_improved=True)
     # improved_cnn_eval = evaluate_model_performance(
-    #     y_test.values, improved_cnn_results['y_test_pred'], test_data, improved_cnn_results['y_test_proba']
+    #     y_test_1.values, improved_cnn_results['y_test_pred'], test_data_1, improved_cnn_results['y_test_proba']
     # )
     # models_results['improved_cnn'] = {'results': improved_cnn_results, 'evaluation': improved_cnn_eval}
 
@@ -131,7 +148,8 @@ def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
         model_metrics = eval_data['model']
         print(f"{model_name:15} - Prec: {model_metrics['precision']:.3f}, "
               f"Rec: {model_metrics['recall']:.3f}, "
-              f"Acc: {model_metrics['accuracy']:.3f}")
+              f"Acc: {model_metrics['accuracy']:.3f}, "
+              f"F1: {model_metrics['f1']:.3f}")
 
     # User notes
     user_notes = prompt_user_notes(interactive=False)  # Set to True for interactive mode
@@ -145,12 +163,22 @@ def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
             model_data['results']['params'], user_notes
         )
 
-        # Save predictions
-        save_predictions(
-            experiment_id, model_name, test_data,
-            y_test.values, model_data['results']['y_test_pred'],
-            model_data['results']['y_test_proba']
-        )
+        # Save predictions (use appropriate test set based on model)
+        if model_name == 'ensemble':
+            # Ensemble uses its own split test set
+            ensemble_test_data = model_data['results']['ensemble_test_data']
+            save_predictions(
+                experiment_id, model_name, ensemble_test_data,
+                ensemble_test_data['label'].values, model_data['results']['y_test_pred'],
+                model_data['results']['y_test_proba']
+            )
+        else:
+            # Other models use original test set
+            save_predictions(
+                experiment_id, model_name, test_data,
+                y_test.values, model_data['results']['y_test_pred'],
+                model_data['results']['y_test_proba']
+            )
 
     print(f"Experiment {experiment_id} completed and logged!")
     return experiment_id, models_results
@@ -182,5 +210,6 @@ if __name__ == "__main__":
         original_data_path="data/processed_original_virus.csv",
         n_samples=20_000,
         engineering_fraction=0.02,
-        split_type='random'
+        split_type='random',
+        # random_substitution_only=True
     )

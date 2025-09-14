@@ -6,14 +6,15 @@ Calculates performance metrics overall and by subgroups
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import precision_score, recall_score, accuracy_score
+from sklearn.metrics import precision_score, recall_score, accuracy_score, f1_score
 
 def calculate_metrics(y_true, y_pred, y_proba=None):
     """Calculate basic classification metrics"""
     return {
         'accuracy': accuracy_score(y_true, y_pred),
         'precision': precision_score(y_true, y_pred, zero_division=0),
-        'recall': recall_score(y_true, y_pred, zero_division=0)
+        'recall': recall_score(y_true, y_pred, zero_division=0),
+        'f1': f1_score(y_true, y_pred, zero_division=0)
     }
 
 def calculate_subgroup_metrics(y_true, y_pred, subgroup_col, y_proba=None):
@@ -68,10 +69,12 @@ def print_metrics_comparison(results):
     """Print formatted metrics comparison"""
     print(f"Model    - Acc: {results['model']['accuracy']:.3f}, "
           f"Prec: {results['model']['precision']:.3f}, "
-          f"Rec: {results['model']['recall']:.3f}")
+          f"Rec: {results['model']['recall']:.3f}, "
+          f"F1: {results['model']['f1']:.3f}")
     print(f"Naive    - Acc: {results['naive']['accuracy']:.3f}, "
           f"Prec: {results['naive']['precision']:.3f}, "
-          f"Rec: {results['naive']['recall']:.3f}")
+          f"Rec: {results['naive']['recall']:.3f}, "
+          f"F1: {results['naive']['f1']:.3f}")
 
     if 'subgroups' in results:
         print("\nSubgroup Analysis:")

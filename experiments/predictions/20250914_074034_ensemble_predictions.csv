@@ -1,0 +1,5 @@
+sequence_id,true_label,predicted_label,prediction_probability,engineering_method,sequence_length,length_bin,virus_key,virus_family
+ENG_00003,1,1,0.4716589105339105,random_substitution,193,short,human_rhinovirus_b_nc_0014901,picornavirus
+ORG_00003,0,1,0.49659938672438675,natural,320,long,human_metapneumovirus_nc_0041482,unknown
+ENG_00004,1,1,0.49925378787878794,random_substitution,187,short,human_rhinovirus_b_nc_0014901,picornavirus
+ORG_00001,0,1,0.5007205988455988,natural,152,short,human_coronavirus_oc43_nc_0062131,coronavirus

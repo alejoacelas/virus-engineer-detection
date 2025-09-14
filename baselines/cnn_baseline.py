@@ -9,7 +9,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
-from utils.imbalance_handling import get_test_aware_class_weights_for_pytorch, find_optimal_threshold_f1
+from sklearn.metrics import accuracy_score, recall_score
+from utils.imbalance_handling import find_optimal_threshold_f1, get_test_aware_class_weights_for_pytorch
 
 def dna_to_onehot(sequence, max_len=200):
     """Convert DNA sequence to one-hot encoding"""
@@ -82,7 +83,7 @@ class ImprovedCNN(nn.Module):
         return self.fc2(x)
 
 def train_cnn_baseline(X_train, X_test, y_train, y_test, max_len=200, epochs=20,
-                      batch_size=32, use_improved=False):
+                      batch_size=32, use_improved=False, use_test_aware_weights=False):
     """Train CNN baseline"""
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -104,20 +105,22 @@ def train_cnn_baseline(X_train, X_test, y_train, y_test, max_len=200, epochs=20,
         TensorDataset(X_train_tensor, y_train_tensor),
         batch_size=batch_size, shuffle=True
     )
-    test_loader = DataLoader(
-        TensorDataset(X_test_tensor, y_test_tensor),
-        batch_size=batch_size
-    )
 
     # Model
     model = ImprovedCNN() if use_improved else SimpleCNN()
     model = model.to(device)
 
-    # Test-aware class weights for imbalanced data
-    train_positive_rate = y_train.mean()
-    test_positive_rate = y_test.mean()
-    # class_weights = get_test_aware_class_weights_for_pytorch(train_positive_rate, test_positive_rate)
-    criterion = nn.CrossEntropyLoss()
+    # Loss function with optional test-aware class weights
+    if use_test_aware_weights:
+        # Calculate test-aware class weights (train: 50/50, test: 2% positive)
+        class_weights = get_test_aware_class_weights_for_pytorch(
+            train_positive_rate=0.5,
+            test_positive_rate=0.02
+        ).to(device)
+        criterion = nn.CrossEntropyLoss(weight=class_weights)
+    else:
+        criterion = nn.CrossEntropyLoss()
+
     optimizer = optim.Adam(model.parameters())
 
     # Training loop
@@ -131,8 +134,38 @@ def train_cnn_baseline(X_train, X_test, y_train, y_test, max_len=200, epochs=20,
             loss.backward()
             optimizer.step()
 
-        if (epoch + 1) % 5 == 0:
+        if (epoch + 1) % 2 == 0:
+            # Calculate training metrics
+            model.eval()
+            with torch.no_grad():
+                # Training predictions
+                train_preds = []
+                for batch_X, _ in DataLoader(TensorDataset(X_train_tensor, y_train_tensor), batch_size=batch_size):
+                    batch_X = batch_X.to(device)
+                    outputs = model(batch_X)
+                    preds = torch.argmax(outputs, dim=1)
+                    train_preds.extend(preds.cpu().numpy())
+                
+                # Test predictions
+                test_preds = []
+                for batch_X, _ in DataLoader(TensorDataset(X_test_tensor, y_test_tensor), batch_size=batch_size):
+                    batch_X = batch_X.to(device)
+                    outputs = model(batch_X)
+                    preds = torch.argmax(outputs, dim=1)
+                    test_preds.extend(preds.cpu().numpy())
+            
+            # Calculate metrics
+            train_acc = accuracy_score(y_train, train_preds)
+            train_recall = recall_score(y_train, train_preds, zero_division=0)
+            test_acc = accuracy_score(y_test, test_preds)
+            test_recall = recall_score(y_test, test_preds, zero_division=0)
+            
             print(f"Epoch {epoch+1}/{epochs}")
+            print(f"  Training - Accuracy: {train_acc:.4f}, Recall: {train_recall:.4f}")
+            print(f"  Testing  - Accuracy: {test_acc:.4f}, Recall: {test_recall:.4f}")
+            print()
+            
+            model.train()  # Set back to training mode
 
     # Get predictions
     model.eval()
@@ -170,5 +203,12 @@ def train_cnn_baseline(X_train, X_test, y_train, y_test, max_len=200, epochs=20,
         'y_test_pred': y_test_pred_optimized,
         'y_train_proba': y_train_proba,
         'y_test_proba': y_test_proba,
-        'params': {'max_len': max_len, 'epochs': epochs, 'batch_size': batch_size, 'use_improved': use_improved, 'optimal_threshold': optimal_threshold}
+        'params': {
+            'max_len': max_len,
+            'epochs': epochs,
+            'batch_size': batch_size,
+            'use_improved': use_improved,
+            'use_test_aware_weights': use_test_aware_weights,
+            'optimal_threshold': optimal_threshold
+        }
     }
