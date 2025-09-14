@@ -30,7 +30,7 @@ python enhanced_sequence_generator.py
 
 # The system will automatically:
 # - Load 25 complete viral genomes with ORF annotations
-# - Apply 13 different engineering methods
+# - Apply 4 different engineering methods
 # - Generate 1000 sequences per virus with biological realism
 # - Save results to engineered_sequences/
 ```
