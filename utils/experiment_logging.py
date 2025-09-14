@@ -59,7 +59,7 @@ def save_predictions(experiment_id, model_name, test_data, y_true, y_pred, y_pro
         pred_data['prediction_probability'] = y_proba[:, 1] if y_proba.ndim > 1 else y_proba
 
     # Add metadata if available
-    for col in ['engineering_method', 'sequence_length', 'length_bin']:
+    for col in ['engineering_method', 'sequence_length', 'length_bin', 'virus_key', 'virus_family']:
         if col in test_data:
             pred_data[col] = test_data[col]
 

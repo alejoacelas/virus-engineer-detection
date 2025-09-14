@@ -374,6 +374,137 @@ def create_segments(sequences: List[str], n_samples: int, mean_length: int = 187
     segments, _, _ = create_segments_with_positions(sequences, n_samples, mean_length, sd_length)
     return segments
 
+def load_ged_test_dataset(csv_path: str, n_samples: int = None, mean_length: int = 187, sd_length: int = 50) -> pd.DataFrame:
+    """
+    Load GED_test.csv and generate segments compatible with train_and_test.py format
+
+    Args:
+        csv_path: Path to GED_test.csv
+        n_samples: Number of samples to generate (None for all)
+        mean_length: Mean segment length
+        sd_length: Standard deviation of segment length
+
+    Returns:
+        DataFrame compatible with train_and_test.py test dataset format
+    """
+    print(f"Loading GED test data from {csv_path}...")
+
+    # Load the CSV
+    df = pd.read_csv(csv_path)
+    print(f"Loaded {len(df)} sequences from GED test dataset")
+
+    sequences = df['sequence'].tolist()
+    labels = df['engineered'].tolist()
+
+    # If n_samples not specified, use all data
+    if n_samples is None:
+        n_samples = len(sequences)
+    elif n_samples > len(sequences):
+        # If more samples requested than available, sample with replacement
+        print(f"Requested {n_samples} samples but only {len(sequences)} available, sampling with replacement")
+        sample_indices = np.random.choice(len(sequences), n_samples, replace=True)
+        sequences = [sequences[i] for i in sample_indices]
+        labels = [labels[i] for i in sample_indices]
+    else:
+        # Sample without replacement
+        sample_indices = np.random.choice(len(sequences), n_samples, replace=False)
+        sequences = [sequences[i] for i in sample_indices]
+        labels = [labels[i] for i in sample_indices]
+
+    # Generate segments with positions
+    segments, seg_starts, seg_ends = create_segments_with_positions(
+        sequences, len(sequences), mean_length, sd_length
+    )
+
+    # Create DataFrame in expected format
+    result_df = pd.DataFrame({
+        'sequence_id': [f"GED_{i:05d}" for i in range(len(segments))],
+        'sequence': segments,
+        'label': labels,
+        'engineering_method': ['unknown' if label == 0 else 'engineered' for label in labels],
+        'virus_key': ['ged_test'] * len(segments),
+        'virus_family': ['unknown'] * len(segments),
+        'segment_start': seg_starts,
+        'segment_end': seg_ends,
+        'eng_start': [-1] * len(segments),  # Unknown engineering positions
+        'eng_end': [-1] * len(segments),
+        'overlap': [0] * len(segments),
+        'accession_id': ['unknown'] * len(segments),
+        'family_split': [None] * len(segments),
+        'random_split': [None] * len(segments),
+        'sequence_length': [len(seg) for seg in segments],
+        'length_bin': pd.cut([len(seg) for seg in segments], bins=3, labels=['short', 'medium', 'long'])
+    })
+
+    print(f"Generated {len(result_df)} segments with engineering fraction: {result_df['label'].mean():.3f}")
+    return result_df
+
+def load_viral_vectors_dataset(csv_path: str, n_samples: int = None, mean_length: int = 187, sd_length: int = 50) -> pd.DataFrame:
+    """
+    Load viral_vectors.csv and generate segments compatible with train_and_test.py format
+    All sequences get label=1 (engineered)
+
+    Args:
+        csv_path: Path to viral_vectors.csv
+        n_samples: Number of samples to generate (None for all)
+        mean_length: Mean segment length
+        sd_length: Standard deviation of segment length
+
+    Returns:
+        DataFrame compatible with train_and_test.py test dataset format
+    """
+    print(f"Loading viral vectors data from {csv_path}...")
+
+    # Load the CSV
+    df = pd.read_csv(csv_path)
+    print(f"Loaded {len(df)} sequences from viral vectors dataset")
+
+    sequences = df['sequence'].tolist()
+    names = df['name'].tolist() if 'name' in df.columns else ['unknown'] * len(sequences)
+
+    # If n_samples not specified, use all data
+    if n_samples is None:
+        n_samples = len(sequences)
+    elif n_samples > len(sequences):
+        # If more samples requested than available, sample with replacement
+        print(f"Requested {n_samples} samples but only {len(sequences)} available, sampling with replacement")
+        sample_indices = np.random.choice(len(sequences), n_samples, replace=True)
+        sequences = [sequences[i] for i in sample_indices]
+        names = [names[i] for i in sample_indices]
+    else:
+        # Sample without replacement
+        sample_indices = np.random.choice(len(sequences), n_samples, replace=False)
+        sequences = [sequences[i] for i in sample_indices]
+        names = [names[i] for i in sample_indices]
+
+    # Generate segments with positions
+    segments, seg_starts, seg_ends = create_segments_with_positions(
+        sequences, len(sequences), mean_length, sd_length
+    )
+
+    # Create DataFrame in expected format - all labels are 1 (engineered)
+    result_df = pd.DataFrame({
+        'sequence_id': [f"VV_{i:05d}" for i in range(len(segments))],
+        'sequence': segments,
+        'label': [1] * len(segments),  # All viral vectors are labeled as engineered
+        'engineering_method': ['viral_vector'] * len(segments),
+        'virus_key': ['viral_vector'] * len(segments),
+        'virus_family': ['viral_vector'] * len(segments),
+        'segment_start': seg_starts,
+        'segment_end': seg_ends,
+        'eng_start': [-1] * len(segments),  # Unknown engineering positions
+        'eng_end': [-1] * len(segments),
+        'overlap': [0] * len(segments),
+        'accession_id': ['unknown'] * len(segments),
+        'family_split': [None] * len(segments),
+        'random_split': [None] * len(segments),
+        'sequence_length': [len(seg) for seg in segments],
+        'length_bin': pd.cut([len(seg) for seg in segments], bins=3, labels=['short', 'medium', 'long'])
+    })
+
+    print(f"Generated {len(result_df)} segments, all labeled as engineered (label=1)")
+    return result_df
+
 def calculate_overlap(seg_start: int, seg_end: int, eng_start: int, eng_end: int) -> int:
     """
     Calculate overlap between segment and engineering region
@@ -402,7 +533,8 @@ def create_virus_dataset(n_samples: int = 1000,
                         engineered_data_path: str = None,
                         original_data_path: str = None,
                         split_filter: str = None,
-                        split_type: str = 'family') -> pd.DataFrame:
+                        split_type: str = 'family',
+                        random_substitution_only: bool = False) -> pd.DataFrame:
     """
     Create dataset with engineered and original virus sequences
     Similar interface to create_engineering_dataset from data_generator.py
@@ -416,6 +548,7 @@ def create_virus_dataset(n_samples: int = 1000,
         original_data_path: Path to preprocessed original data CSV
         split_filter: Filter by split ('train' or 'test'), None for no filtering
         split_type: Type of split to filter by ('family' or 'random')
+        random_substitution_only: If True, only use engineered sequences with 'random_substitution' method
 
     Returns:
         DataFrame with virus dataset
@@ -442,6 +575,12 @@ def create_virus_dataset(n_samples: int = 1000,
         original_df = original_df[original_df[split_column] == split_filter].copy()
 
         print(f"After filtering: {len(engineered_df)} engineered, {len(original_df)} original samples")
+
+    # Filter for random_substitution only if flag is set
+    if random_substitution_only:
+        print("Filtering engineered data for random_substitution method only...")
+        engineered_df = engineered_df[engineered_df['engineering_method'] == 'random_substitution'].copy()
+        print(f"After random_substitution filter: {len(engineered_df)} engineered samples")
 
     target_positive_samples = int(n_samples * engineering_fraction)
     n_original = n_samples - target_positive_samples

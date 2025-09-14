@@ -9,15 +9,17 @@ import pandas as pd
 from utils.virus_data_processor import create_virus_dataset
 from utils.metrics import evaluate_model_performance, print_metrics_comparison
 from utils.experiment_logging import log_experiment, save_predictions, prompt_user_notes, generate_experiment_id
-from baselines.kmer_baseline import train_kmer_baseline, train_multi_kmer_baseline
+from baselines.kmer_baseline import train_kmer_baseline
 from baselines.cnn_baseline import train_cnn_baseline
 from baselines.blast_baseline import run_blast_baseline
+from utils.virus_data_processor import load_ged_test_dataset, load_viral_vectors_dataset
 
 def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
                   original_data_path="data/processed_original_virus.csv",
                   n_samples=5000,
                   engineering_fraction=0.02,
-                  split_type='family'
+                  split_type='family',
+                  random_substitution_only=False
                   ):
     """Run complete training and testing experiment"""
 
@@ -36,7 +38,8 @@ def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
         engineered_data_path=engineered_data_path,
         original_data_path=original_data_path,
         split_filter='train',
-        split_type=split_type
+        split_type=split_type,
+        random_substitution_only=random_substitution_only
     )
 
     print("\n2. Creating test dataset")
@@ -46,9 +49,11 @@ def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
         engineered_data_path=engineered_data_path,
         original_data_path=original_data_path,
         split_filter='test',
-        split_type=split_type
+        split_type=split_type,
+        random_substitution_only=random_substitution_only
     )
-    # test_data = train_data.sample(frac=0.25)
+    # test_data = load_ged_test_dataset("data/GED_test.csv", n_samples=int(n_samples * 0.2))
+    # test_data = load_viral_vectors_dataset("data/GED_test.csv", n_samples=int(n_samples * 0.2))
 
     print("\n")
     print(f"Training engineering fraction: {train_data['label'].mean():.3f}")
@@ -94,19 +99,6 @@ def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
     print("BLAST Results:")
     print_metrics_comparison(blast_eval['overall'])
 
-    # Multi K-mer baseline
-    print("\nTraining Multi-K-mer Baseline...")
-    multi_kmer_results = train_multi_kmer_baseline(
-        X_train, X_test, y_train, y_test, k_values=[4, 6, 8], max_features=500
-    )
-    multi_kmer_eval = evaluate_model_performance(
-        y_test.values, multi_kmer_results['y_test_pred'], test_data, multi_kmer_results['y_test_proba']
-    )
-    models_results['multi_kmer'] = {'results': multi_kmer_results, 'evaluation': multi_kmer_eval}
-
-    print("Multi-K-mer Results:")
-    print_metrics_comparison(multi_kmer_eval['overall'])
-
     # CNN baseline
     print("\nTraining CNN Baseline...")
     cnn_results = train_cnn_baseline(X_train, X_test, y_train, y_test, epochs=10, use_improved=False)
@@ -119,15 +111,15 @@ def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
     print_metrics_comparison(cnn_eval['overall'])
 
     # Improved CNN baseline
-    print("\n5. Training Improved CNN Baseline...")
-    improved_cnn_results = train_cnn_baseline(X_train, X_test, y_train, y_test, epochs=10, use_improved=True)
-    improved_cnn_eval = evaluate_model_performance(
-        y_test.values, improved_cnn_results['y_test_pred'], test_data, improved_cnn_results['y_test_proba']
-    )
-    models_results['improved_cnn'] = {'results': improved_cnn_results, 'evaluation': improved_cnn_eval}
+    # print("\n5. Training Improved CNN Baseline...")
+    # improved_cnn_results = train_cnn_baseline(X_train, X_test, y_train, y_test, epochs=10, use_improved=True)
+    # improved_cnn_eval = evaluate_model_performance(
+    #     y_test.values, improved_cnn_results['y_test_pred'], test_data, improved_cnn_results['y_test_proba']
+    # )
+    # models_results['improved_cnn'] = {'results': improved_cnn_results, 'evaluation': improved_cnn_eval}
 
-    print("Improved CNN Results:")
-    print_metrics_comparison(improved_cnn_eval['overall'])
+    # print("Improved CNN Results:")
+    # print_metrics_comparison(improved_cnn_eval['overall'])
 
     # Summary comparison
     print("\n" + "=" * 60)
@@ -188,7 +180,7 @@ if __name__ == "__main__":
     experiment_id, results = run_experiment(
         engineered_data_path="data/processed_engineered_virus.csv",
         original_data_path="data/processed_original_virus.csv",
-        n_samples=200_000,
+        n_samples=20_000,
         engineering_fraction=0.02,
         split_type='random'
     )

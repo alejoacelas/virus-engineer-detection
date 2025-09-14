@@ -1,0 +1,196 @@
+{
+  "experiment_id": "20250913_232924",
+  "timestamp": "2025-09-13T23:30:37.729466",
+  "model_name": "kmer",
+  "data_params": {
+    "n_samples": 20000,
+    "engineering_fraction_train": 0.5,
+    "engineering_fraction_test": 0.02,
+    "split_type": "random",
+    "train_size": 16000,
+    "test_size": 4000,
+    "train_methods": {
+      "natural": 8000,
+      "igem_gfp_insertion": 1523,
+      "gfp_insertion": 1474,
+      "crispr_insertion": 1473,
+      "tn5_insertion": 1262,
+      "region_inversion": 982,
+      "region_duplication": 946,
+      "random_substitution": 340
+    },
+    "test_methods": {
+      "viral_vector": 4000
+    }
+  },
+  "model_params": {
+    "k": 6,
+    "max_features": 1000,
+    "use_tfidf": false,
+    "optimal_threshold": 0.0
+  },
+  "results": {
+    "overall": {
+      "model": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "naive": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "positive_fraction": 1.0
+    },
+    "by_engineering_method": {
+      "model": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "naive": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "positive_fraction": 1.0,
+      "subgroups": {
+        "model": {
+          "viral_vector": {
+            "accuracy": 1.0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "n_samples": "4000"
+          }
+        },
+        "naive": {
+          "viral_vector": {
+            "accuracy": 1.0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "n_samples": "4000"
+          }
+        }
+      }
+    },
+    "by_length_bin": {
+      "model": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "naive": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "positive_fraction": 1.0,
+      "subgroups": {
+        "model": {
+          "medium": {
+            "accuracy": 1.0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "n_samples": "3069"
+          },
+          "short": {
+            "accuracy": 1.0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "n_samples": "546"
+          },
+          "long": {
+            "accuracy": 1.0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "n_samples": "385"
+          }
+        },
+        "naive": {
+          "medium": {
+            "accuracy": 1.0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "n_samples": "3069"
+          },
+          "short": {
+            "accuracy": 1.0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "n_samples": "546"
+          },
+          "long": {
+            "accuracy": 1.0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "n_samples": "385"
+          }
+        }
+      }
+    },
+    "by_virus_key": {
+      "model": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "naive": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "positive_fraction": 1.0,
+      "subgroups": {
+        "model": {
+          "viral_vector": {
+            "accuracy": 1.0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "n_samples": "4000"
+          }
+        },
+        "naive": {
+          "viral_vector": {
+            "accuracy": 1.0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "n_samples": "4000"
+          }
+        }
+      }
+    },
+    "by_virus_family": {
+      "model": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "naive": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "positive_fraction": 1.0,
+      "subgroups": {
+        "model": {
+          "viral_vector": {
+            "accuracy": 1.0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "n_samples": "4000"
+          }
+        },
+        "naive": {
+          "viral_vector": {
+            "accuracy": 1.0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "n_samples": "4000"
+          }
+        }
+      }
+    }
+  },
+  "user_notes": "Automated test run"
+}
