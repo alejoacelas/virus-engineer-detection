@@ -90,7 +90,7 @@ def run_experiment(engineered_data_path="data/processed_engineered_virus.csv",
     print_metrics_comparison(kmer_eval['overall'])
 
     print("\nRunning BLAST-based Baseline...")
-    blast_results = run_blast_baseline(X_train, X_test, y_train, y_test)
+    blast_results = run_blast_baseline(X_train, X_test, y_train, y_test, num_threads=18)
     blast_eval = evaluate_model_performance(
         y_test.values, blast_results['y_test_pred'], test_data, blast_results['y_test_proba']
     )

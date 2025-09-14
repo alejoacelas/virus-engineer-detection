@@ -26,7 +26,7 @@ def create_blast_db(fasta_file, db_name):
     ]
     subprocess.run(command, check=True, capture_output=True)
 
-def run_blast(query_file, db_name, output_file):
+def run_blast(query_file, db_name, output_file, num_threads=1):
     """Run blastn and save results to a file."""
     command = [
         'blastn',
@@ -37,7 +37,8 @@ def run_blast(query_file, db_name, output_file):
         '-max_hsps', '1',
         '-evalue', '10',
         '-max_target_seqs', '1',
-        '-word_size', '7'
+        '-word_size', '7',
+        '-num_threads', str(num_threads)
     ]
     subprocess.run(command, check=True, capture_output=True)
 
@@ -54,7 +55,7 @@ def parse_blast_results(blast_output_path):
     blast_df['query_id'] = blast_df['query_id'].astype(int)
     return blast_df
 
-def run_blast_baseline(X_train, X_test, y_train, y_test, min_non_matching_bases=30):
+def run_blast_baseline(X_train, X_test, y_train, y_test, min_non_matching_bases=30, num_threads=1):
     """Run BLAST-based chimera detection baseline."""
     with tempfile.TemporaryDirectory() as temp_dir:
         db_name = os.path.join(temp_dir, 'viral_db')
@@ -70,7 +71,7 @@ def run_blast_baseline(X_train, X_test, y_train, y_test, min_non_matching_bases=
         # Run BLAST on test sequences
         test_sequences = X_test['sequence']
         write_fasta_file(test_sequences, query_file)
-        run_blast(query_file, db_name, output_file)
+        run_blast(query_file, db_name, output_file, num_threads=num_threads)
 
         # Parse results and predict
         blast_df = parse_blast_results(output_file)
@@ -103,5 +104,5 @@ def run_blast_baseline(X_train, X_test, y_train, y_test, min_non_matching_bases=
         'y_test_pred': y_pred,
         'y_train_proba': None,
         'y_test_proba': y_proba,
-        'params': {'min_non_matching_bases': min_non_matching_bases}
+        'params': {'min_non_matching_bases': min_non_matching_bases, 'num_threads': num_threads}
     }
